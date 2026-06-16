@@ -27,9 +27,6 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 1.8s infinite ease-in-out}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
 
-.banner{display:inline-block;text-align:left;margin:0 auto;overflow-x:auto;max-width:100%}
-.banner pre{font-family:var(--mono);font-size:clamp(5px,1.55vw,11px);line-height:1.05;color:var(--accent);text-shadow:0 0 16px rgba(0,255,136,.35);white-space:pre;margin:0}
-
 h1{font-family:var(--disp);font-weight:700;font-size:clamp(26px,4.5vw,42px);line-height:1.05;letter-spacing:-.3px;color:#eef4f8;text-transform:uppercase;margin-top:30px}
 h1 .g{color:var(--accent)}
 .tagline{margin:18px auto 0;color:var(--muted);font-size:14px;max-width:600px;line-height:1.7}
@@ -98,7 +95,6 @@ footer .disc{margin-top:18px;color:var(--faint);font-size:10px;letter-spacing:.0
 
 <div class="hero">
   <div class="eyebrow"><span class="dot"></span> Blue Team Toolkit · NIST CSF 2.0 <span class="dot"></span></div>
-  <div class="banner"><img src="banner.png" alt="ZavetSec" style="max-width:100%;height:auto;border-radius:10px"></div>
   <h1>NIST CSF 2.0 <span class="g">для SOC</span></h1>
   <p class="tagline">Операционный набор blue team: референс по шести функциям, самооценка зрелости и карта покрытия детектирования. Стек-агностично, ноль зависимостей, работает офлайн.</p>
   <div class="badges">
