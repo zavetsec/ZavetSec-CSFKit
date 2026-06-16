@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOC Maturity Self-Assessment · NIST CSF 2.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+:root{
+  --bg:#0a0d10;--panel:#0d1117;--panel2:#11161d;--panel3:#070a0d;
+  --accent:#00ff88;--accent-dim:#00b863;--text:#c9d4de;--muted:#6b7986;--faint:#46525d;--line:#1c252e;
+  --red:#ff4d5e;--amber:#ffb02e;--blue:#39a0ff;--purple:#b18cff;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;--disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:15px;line-height:1.7;position:relative;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,255,136,.022) 0,rgba(0,255,136,.022) 1px,transparent 1px,transparent 3px);mix-blend-mode:overlay;opacity:.5}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(900px 600px at 16% -5%,rgba(0,255,136,.08),transparent 60%),radial-gradient(760px 520px at 96% 6%,rgba(57,160,255,.045),transparent 55%)}
+.wrap{max-width:920px;margin:0 auto;padding:0 22px 120px}
+
+header{padding:64px 0 36px;border-bottom:1px solid var(--line)}
+.eyebrow{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--accent)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 1.8s infinite ease-in-out;margin-left:2px}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+h1{font-family:var(--disp);font-weight:700;font-size:clamp(32px,6vw,58px);line-height:1;letter-spacing:-.5px;color:#eef4f8;text-transform:uppercase}
+h1 .g{color:var(--accent);text-shadow:0 0 22px rgba(0,255,136,.35)}
+.sub{margin-top:18px;color:var(--muted);font-size:13.5px;max-width:680px}
+
+/* dashboard */
+.dash{position:sticky;top:0;z-index:50;margin:26px 0 8px;background:rgba(10,13,16,.92);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
+.dash-top{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.overall{flex:1;min-width:200px}
+.overall .lbl{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.overall .tier{font-family:var(--disp);font-weight:700;font-size:30px;line-height:1;margin-top:3px}
+.overall .pct{font-size:12px;color:var(--muted);margin-top:2px}
+.weak{font-size:11px;color:var(--amber);margin-top:8px}
+.weak b{color:#eef4f8}
+.dash-actions{display:flex;gap:8px;flex-wrap:wrap}
+button{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:8px 13px;border-radius:4px;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.primary{border-color:var(--accent-dim);color:var(--accent)}
+
+.fn-bars{margin-top:16px;display:grid;gap:7px}
+.fbar{display:grid;grid-template-columns:96px 1fr 76px;align-items:center;gap:12px;font-size:11.5px}
+.fbar .fn{font-family:var(--disp);font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.fbar .track{height:9px;background:var(--panel3);border-radius:5px;overflow:hidden;border:1px solid var(--line)}
+.fbar .fill{height:100%;width:0;border-radius:5px;transition:width .4s ease,background .3s}
+.fbar .tval{text-align:right;font-size:10px;letter-spacing:.06em;color:var(--muted)}
+.fbar .tval b{font-family:var(--disp);font-weight:700}
+
+/* tiers legend */
+.legend{margin:24px 0 0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.lg{border:1px solid var(--line);border-radius:5px;padding:10px 12px;background:var(--panel)}
+.lg .lv{font-size:9px;color:var(--faint);letter-spacing:.1em}
+.lg .t{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:12px;margin-top:2px}
+.lg p{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+.lg.t1{border-top:2px solid var(--red)}.lg.t1 .t{color:var(--red)}
+.lg.t2{border-top:2px solid var(--amber)}.lg.t2 .t{color:var(--amber)}
+.lg.t3{border-top:2px solid var(--blue)}.lg.t3 .t{color:var(--blue)}
+.lg.t4{border-top:2px solid var(--accent)}.lg.t4 .t{color:var(--accent)}
+
+/* function sections */
+.fsec{margin-top:40px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.fsec-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px}
+.fsec-head .code{font-family:var(--disp);font-weight:700;font-size:24px;min-width:46px}
+.fsec-head .ttl{flex:1}
+.fsec-head h2{font-family:var(--disp);font-weight:600;text-transform:uppercase;letter-spacing:.02em;font-size:19px;color:#eef4f8;line-height:1.1}
+.fsec-head .meta{font-size:11px;color:var(--muted);margin-top:2px}
+.fsec-head .badge{font-family:var(--disp);font-weight:700;font-size:12px;letter-spacing:.05em;padding:5px 11px;border-radius:4px;text-transform:uppercase;white-space:nowrap}
+.fsec-body{padding:6px 20px 16px}
+.item{display:flex;gap:13px;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start;transition:.12s}
+.item:last-child{border-bottom:none}
+.item:hover{color:#eef4f8}
+.cbx{flex:0 0 20px;width:20px;height:20px;border:1.5px solid var(--faint);border-radius:4px;margin-top:1px;position:relative;transition:.15s;background:var(--panel3)}
+.item:hover .cbx{border-color:var(--accent-dim)}
+.item.on .cbx{background:var(--accent);border-color:var(--accent)}
+.item.on .cbx::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#0a0d10;font-weight:700;font-size:14px}
+.item .txt{flex:1;font-size:13.5px;line-height:1.55}
+.item.on .txt{color:var(--muted)}
+.item .core{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(255,176,46,.3);border-radius:3px;padding:1px 5px;margin-left:8px;vertical-align:middle;white-space:nowrap}
+
+/* function accent colors */
+.c-gv{color:var(--purple)} .c-id{color:var(--blue)} .c-pr{color:var(--accent)}
+.c-de{color:var(--amber)} .c-rs{color:var(--red)} .c-rc{color:var(--accent-dim)}
+.b-gv{background:rgba(177,140,255,.12);color:var(--purple);border:1px solid rgba(177,140,255,.3)}
+.b-id{background:rgba(57,160,255,.12);color:var(--blue);border:1px solid rgba(57,160,255,.3)}
+.b-pr{background:rgba(0,255,136,.1);color:var(--accent);border:1px solid rgba(0,255,136,.28)}
+.b-de{background:rgba(255,176,46,.12);color:var(--amber);border:1px solid rgba(255,176,46,.3)}
+.b-rs{background:rgba(255,77,94,.12);color:var(--red);border:1px solid rgba(255,77,94,.3)}
+.b-rc{background:rgba(0,255,136,.08);color:var(--accent-dim);border:1px solid rgba(0,255,136,.2)}
+
+.note{margin-top:28px;border:1px solid var(--line);border-left:3px solid var(--accent);background:linear-gradient(135deg,rgba(0,255,136,.05),transparent 75%);border-radius:5px;padding:16px 18px;font-size:13px}
+.note b{color:var(--accent)}
+.saved{font-size:10px;color:var(--accent-dim);letter-spacing:.06em;opacity:0;transition:.3s}
+.saved.show{opacity:1}
+
+footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:11px;letter-spacing:.1em}
+footer .lg2{font-family:var(--disp);color:var(--accent);font-size:14px;letter-spacing:.3em;text-transform:uppercase}
+footer .v{margin-top:6px;color:var(--faint)}
+@media(max-width:680px){.legend{grid-template-columns:1fr 1fr}.fbar{grid-template-columns:70px 1fr 60px}}
+@media print{.dash{position:static}button{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Self-Assessment Tool · Blue Team<span class="dot"></span></div>
+  <h1>SOC Maturity<br><span class="g">Self-Assessment</span></h1>
+  <p class="sub">Интерактивная самооценка зрелости SOC по шести функциям NIST CSF 2.0. Отмечайте утверждения, верные прямо сейчас — без «почти» и «в планах». Tier по каждой функции и общий уровень считаются на лету. Прогресс сохраняется в браузере локально.</p>
+</header>
+
+<!-- DASHBOARD -->
+<div class="dash">
+  <div class="dash-top">
+    <div class="overall">
+      <div class="lbl">Общая зрелость · weakest-link</div>
+      <div class="tier" id="ovTier">TIER 1</div>
+      <div class="pct" id="ovPct">0% утверждений отмечено</div>
+      <div class="weak" id="weakLine"></div>
+    </div>
+    <div class="dash-actions">
+      <button class="primary" id="copyBtn">⧉ Копировать сводку</button>
+      <button id="resetBtn">↺ Сбросить</button>
+      <span class="saved" id="savedMsg">● сохранено</span>
+    </div>
+  </div>
+  <div class="fn-bars" id="bars"></div>
+</div>
+
+<div class="legend">
+  <div class="lg t1"><div class="lv">TIER 1 · &lt;25%</div><div class="t">Partial</div><p>Ad-hoc, реактивно, без регламентов.</p></div>
+  <div class="lg t2"><div class="lv">TIER 2 · &lt;50%</div><div class="t">Risk Informed</div><p>Практики есть, но не стандартизованы.</p></div>
+  <div class="lg t3"><div class="lv">TIER 3 · &lt;80%</div><div class="t">Repeatable</div><p>Формализовано, повторяемо, пересматривается.</p></div>
+  <div class="lg t4"><div class="lv">TIER 4 · ≥80%</div><div class="t">Adaptive</div><p>Непрерывное улучшение от метрик и угроз.</p></div>
+</div>
+
+<div id="sections"></div>
+
+<div class="note">
+  <b>Как читать результат.</b> Общий уровень считается по «слабому звену»: безопасность гейтится наименее зрелой функцией, поэтому общий Tier = минимальный среди функций. Реалистичная цель для большинства SOC — <b>Tier 3 по Detect и Respond</b> (ядро, повторяемость критична) и Tier 2–3 по остальным. Разрывы до целевого уровня — это ваш backlog внедрения. Пересматривайте оценку раз в квартал.
+</div>
+
+<footer>
+  <div class="lg2">ZavetSec</div>
+  <p style="margin-top:9px">SOC Maturity Self-Assessment · NIST CSF 2.0 · стек-агностичный инструмент</p>
+  <p class="v">v1.0 · данные хранятся только в вашем браузере · MIT</p>
+</footer>
+
+</div>
+
+<script>
+const FUNCTIONS = [
+  { key:'GV', name:'Govern', cls:'gv', full:'Управление',
+    items:[
+      'Существует утверждённый устав SOC с зафиксированным scope мониторинга.',
+      'Роли L1/L2/L3 и полномочия на containment описаны и известны команде.',
+      'SLA реагирования привязаны к риск-аппетиту, а не взяты произвольно.',
+      'Есть регулярная отчётность наверх с фиксированным набором метрик.',
+      'Риски третьих сторон (подрядчики, MSSP, вендоры) учтены в модели угроз.',
+      'Политики мониторинга, реагирования и хранения логов задокументированы.'
+    ]},
+  { key:'ID', name:'Identify', cls:'id', full:'Идентификация',
+    items:[
+      'Каждый критичный актив имеет подтверждённую поставку телеметрии.',
+      'Критичность активов размечена и используется в приоритетах алертов.',
+      'Построена карта поверхности атаки (внешние сервисы, точки входа).',
+      'Теневые активы регулярно отлавливаются и возвращаются в учёт (CMDB).',
+      'Уязвимости критичных активов приоритизируются для детектирования эксплуатации.'
+    ]},
+  { key:'PR', name:'Protect', cls:'pr', full:'Защита',
+    items:[
+      'Hardening-baseline согласован с IT, а его нарушения логируются.',
+      'Identity-телеметрия покрывает аутентификацию и привилегированные операции.',
+      'Здоровье защитных агентов мониторится: деградация контроля = алерт.',
+      'Межсегментный трафик проходит через точки контроля с логированием.',
+      'Реальные TTP из инцидентов используются в обучении сотрудников.'
+    ]},
+  { key:'DE', name:'Detect', cls:'de', full:'Обнаружение', core:true,
+    items:[
+      'Есть каталог use-case\u2019ов с измеримым покрытием техник противника.',
+      'Detection engineering — процесс с версионированием, тестами и ревью.',
+      'Каждое ложное срабатывание разбирается и ведёт к тюнингу, а не отключению.',
+      'Threat hunting ведётся регулярно по гипотезам (TI-driven и поведенческий).',
+      'Threat intelligence интегрирована и актуализирует детекты.',
+      'Измеряются пробелы покрытия: какие техники не детектируются вообще.'
+    ]},
+  { key:'RS', name:'Respond', cls:'rs', full:'Реагирование', core:true,
+    items:[
+      'Плейбуки покрывают основные сценарии и известны дежурным.',
+      'Инциденты классифицируются по критичности с привязкой к SLA.',
+      'Рутинные действия реагирования автоматизированы (оркестрация).',
+      'Артефакты собираются и сохраняются с соблюдением целостности.',
+      'Матрица коммуникаций определяет, кого и когда уведомлять.',
+      'Полномочия на containment по уровням (L1/L2/L3) закреплены.'
+    ]},
+  { key:'RC', name:'Recover', cls:'rc', full:'Восстановление',
+    items:[
+      'SOC валидирует чистоту среды перед объявлением «восстановлено».',
+      'Пост-инцидентный разбор обязателен по значимым инцидентам.',
+      'Выводы разборов стабильно превращаются в задачи (новые детекты и пр.).',
+      'Ведётся база знаний инцидентов, переиспользуемая для обучения.',
+      'Отслеживаются повторные инциденты одного типа как сигнал незамкнутого цикла.'
+    ]}
+];
+
+const STORE_KEY = 'zavetsec_csf_selfassess_v1';
+let state = {}; // key -> Set of checked indices
+
+function loadState(){
+  try{ const raw = localStorage.getItem(STORE_KEY); if(raw){ const o = JSON.parse(raw);
+    FUNCTIONS.forEach(f=>{ state[f.key] = new Set(o[f.key]||[]); }); return; } }catch(e){}
+  FUNCTIONS.forEach(f=> state[f.key] = new Set());
+}
+function saveState(){
+  try{ const o={}; FUNCTIONS.forEach(f=> o[f.key]=[...state[f.key]]); localStorage.setItem(STORE_KEY, JSON.stringify(o));
+    const m=document.getElementById('savedMsg'); m.classList.add('show'); clearTimeout(window.__st); window.__st=setTimeout(()=>m.classList.remove('show'),1200);
+  }catch(e){}
+}
+function tierOf(pct){ if(pct>=80)return 4; if(pct>=50)return 3; if(pct>=25)return 2; return 1; }
+const TIER_NAME={1:'TIER 1 · Partial',2:'TIER 2 · Risk Informed',3:'TIER 3 · Repeatable',4:'TIER 4 · Adaptive'};
+const TIER_COLOR={1:'var(--red)',2:'var(--amber)',3:'var(--blue)',4:'var(--accent)'};
+
+function buildSections(){
+  const root=document.getElementById('sections');
+  FUNCTIONS.forEach(f=>{
+    const sec=document.createElement('div'); sec.className='fsec'; sec.id='sec-'+f.key;
+    sec.innerHTML = `
+      <div class="fsec-head">
+        <div class="code c-${f.cls}">${f.key}</div>
+        <div class="ttl"><h2>${f.name} — ${f.full}</h2><div class="meta">${f.items.length} утверждений${f.core?' · ядро SOC':''}</div></div>
+        <div class="badge b-${f.cls}" id="badge-${f.key}">TIER 1</div>
+      </div>
+      <div class="fsec-body" id="body-${f.key}"></div>`;
+    root.appendChild(sec);
+    const body=sec.querySelector('#body-'+f.key);
+    f.items.forEach((txt,i)=>{
+      const it=document.createElement('div'); it.className='item'; it.dataset.k=f.key; it.dataset.i=i;
+      const coreTag = (f.core && i<2) ? '' : '';
+      it.innerHTML = `<div class="cbx"></div><div class="txt">${txt}</div>`;
+      it.addEventListener('click',()=>toggle(f.key,i,it));
+      body.appendChild(it);
+    });
+  });
+}
+function buildBars(){
+  const bars=document.getElementById('bars');
+  bars.innerHTML = FUNCTIONS.map(f=>`
+    <div class="fbar">
+      <div class="fn c-${f.cls}">${f.key} ${f.name}</div>
+      <div class="track"><div class="fill" id="fill-${f.key}"></div></div>
+      <div class="tval" id="tval-${f.key}"><b>T1</b> · 0%</div>
+    </div>`).join('');
+}
+function toggle(k,i,el){
+  if(state[k].has(i)){ state[k].delete(i); el.classList.remove('on'); }
+  else{ state[k].add(i); el.classList.add('on'); }
+  saveState(); render();
+}
+function applyChecks(){
+  FUNCTIONS.forEach(f=>{ state[f.key].forEach(i=>{ const el=document.querySelector(`.item[data-k="${f.key}"][data-i="${i}"]`); if(el)el.classList.add('on'); }); });
+}
+function render(){
+  let tiers=[];
+  FUNCTIONS.forEach(f=>{
+    const n=f.items.length, c=state[f.key].size, pct=Math.round(c/n*100), t=tierOf(pct);
+    tiers.push({f,t,pct});
+    const fill=document.getElementById('fill-'+f.key);
+    fill.style.width=pct+'%'; fill.style.background=TIER_COLOR[t];
+    document.getElementById('tval-'+f.key).innerHTML=`<b style="color:${TIER_COLOR[t]}">T${t}</b> · ${pct}%`;
+    const b=document.getElementById('badge-'+f.key); b.textContent='TIER '+t;
+  });
+  const minTier=Math.min(...tiers.map(x=>x.t));
+  const totalItems=FUNCTIONS.reduce((s,f)=>s+f.items.length,0);
+  const totalChecked=FUNCTIONS.reduce((s,f)=>s+state[f.key].size,0);
+  const ovPct=Math.round(totalChecked/totalItems*100);
+  const ovT=document.getElementById('ovTier');
+  ovT.textContent=TIER_NAME[minTier]; ovT.style.color=TIER_COLOR[minTier];
+  document.getElementById('ovPct').textContent=`${ovPct}% утверждений отмечено · ${totalChecked}/${totalItems}`;
+  // weakest link line
+  const weakest=tiers.filter(x=>x.t===minTier).map(x=>x.f.key);
+  const wl=document.getElementById('weakLine');
+  if(totalChecked===0){ wl.textContent=''; }
+  else{ wl.innerHTML = `Слабое звено: <b>${weakest.join(', ')}</b> — общий уровень тянется по ним.`; }
+}
+function copySummary(){
+  let lines=['SOC Maturity Self-Assessment · NIST CSF 2.0',''];
+  let minTier=4;
+  FUNCTIONS.forEach(f=>{ const n=f.items.length,c=state[f.key].size,pct=Math.round(c/n*100),t=tierOf(pct);
+    minTier=Math.min(minTier,t);
+    lines.push(`${f.key} ${f.name}: Tier ${t} (${pct}%, ${c}/${n})`);
+  });
+  lines.push('', `Общий уровень (weakest-link): Tier ${minTier}`);
+  const txt=lines.join('\n');
+  navigator.clipboard?.writeText(txt).then(()=>{
+    const b=document.getElementById('copyBtn'); const o=b.textContent; b.textContent='✓ Скопировано'; setTimeout(()=>b.textContent=o,1400);
+  }).catch(()=>{ window.prompt('Скопируйте сводку:', txt); });
+}
+function reset(){
+  if(!confirm('Сбросить все отметки?'))return;
+  FUNCTIONS.forEach(f=> state[f.key]=new Set());
+  document.querySelectorAll('.item.on').forEach(el=>el.classList.remove('on'));
+  saveState(); render();
+}
+
+loadState(); buildBars(); buildSections(); applyChecks(); render();
+document.getElementById('resetBtn').addEventListener('click',reset);
+document.getElementById('copyBtn').addEventListener('click',copySummary);
+</script>
+</body>
+</html>

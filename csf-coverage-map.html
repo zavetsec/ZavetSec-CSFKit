@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSF Detection Coverage Map · NIST CSF 2.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+:root{
+  --bg:#0a0d10;--panel:#0d1117;--panel2:#11161d;--panel3:#070a0d;
+  --accent:#00ff88;--accent-dim:#00b863;--text:#c9d4de;--muted:#6b7986;--faint:#46525d;--line:#1c252e;
+  --red:#ff4d5e;--amber:#ffb02e;--blue:#39a0ff;--purple:#b18cff;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;--disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:14px;line-height:1.65;position:relative;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,255,136,.02) 0,rgba(0,255,136,.02) 1px,transparent 1px,transparent 3px);mix-blend-mode:overlay;opacity:.5}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(900px 600px at 16% -5%,rgba(0,255,136,.08),transparent 60%),radial-gradient(760px 520px at 96% 6%,rgba(57,160,255,.045),transparent 55%)}
+.wrap{max-width:1160px;margin:0 auto;padding:0 22px 120px}
+
+header{padding:60px 0 32px;border-bottom:1px solid var(--line)}
+.eyebrow{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--accent)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 1.8s infinite ease-in-out;margin-left:2px}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+h1{font-family:var(--disp);font-weight:700;font-size:clamp(28px,5.5vw,52px);line-height:1.02;letter-spacing:-.5px;color:#eef4f8;text-transform:uppercase}
+h1 .g{color:var(--accent);text-shadow:0 0 20px rgba(0,255,136,.3)}
+.sub{margin-top:16px;color:var(--muted);font-size:13px;max-width:780px}
+.intro{margin-top:20px;border:1px solid var(--line);border-left:3px solid var(--accent);background:linear-gradient(135deg,rgba(0,255,136,.05),transparent 75%);border-radius:5px;padding:14px 16px;font-size:12.5px}
+.intro b{color:var(--accent)}
+
+.dash{position:sticky;top:0;z-index:50;margin:24px 0 8px;background:rgba(10,13,16,.93);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.cov-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.cov{border:1px solid var(--line);border-radius:5px;padding:10px 12px;text-align:center;background:var(--panel)}
+.cov .n{font-family:var(--disp);font-weight:700;font-size:24px;line-height:1}
+.cov .l{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.cov.covered .n{color:var(--accent)} .cov.partial .n{color:var(--amber)}
+.cov.gap .n{color:var(--red)} .cov.na .n{color:var(--faint)} .cov.total .n{color:#eef4f8}
+.covbar{height:8px;border-radius:4px;margin-top:12px;overflow:hidden;display:flex;border:1px solid var(--line);background:var(--panel3)}
+.covbar i{height:100%;display:block}
+.dash-actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:7px 12px;border-radius:4px;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--accent);color:var(--accent)}
+.saved{font-size:10px;color:var(--accent-dim);letter-spacing:.06em;opacity:0;transition:.3s;margin-left:auto}
+.saved.show{opacity:1}
+
+h2.fn{font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:20px;margin:42px 0 4px;display:flex;align-items:center;gap:12px}
+h2.fn .tag{font-size:10px;letter-spacing:.1em;padding:4px 9px;border-radius:3px;font-weight:600}
+.fn-de{color:var(--amber)} .tag-de{background:rgba(255,176,46,.12);color:var(--amber);border:1px solid rgba(255,176,46,.3)}
+.fn-rs{color:var(--red)} .tag-rs{background:rgba(255,77,94,.12);color:var(--red);border:1px solid rgba(255,77,94,.3)}
+.fn-id{color:var(--blue)} .tag-id{background:rgba(57,160,255,.12);color:var(--blue);border:1px solid rgba(57,160,255,.3)}
+.fn-pr{color:var(--accent)} .tag-pr{background:rgba(0,255,136,.1);color:var(--accent);border:1px solid rgba(0,255,136,.28)}
+.fn-gv{color:var(--purple)} .tag-gv{background:rgba(177,140,255,.12);color:var(--purple);border:1px solid rgba(177,140,255,.3)}
+.fn-rc{color:var(--accent-dim)} .tag-rc{background:rgba(0,255,136,.08);color:var(--accent-dim);border:1px solid rgba(0,255,136,.2)}
+.fn-desc{font-size:12px;color:var(--muted);margin:6px 0 14px}
+
+table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12px}
+th{background:var(--panel2);color:var(--accent);text-transform:uppercase;letter-spacing:.05em;font-size:10px;text-align:left;padding:9px 11px;border:1px solid var(--line);font-weight:600;font-family:var(--disp);position:sticky;top:0}
+td{padding:9px 11px;border:1px solid var(--line);vertical-align:top}
+tr:nth-child(even) td{background:rgba(255,255,255,.012)}
+.cat{font-family:var(--mono);color:var(--accent-dim);font-size:11px;white-space:nowrap}
+.uc{color:#eef4f8;font-weight:500}
+.src{color:var(--muted);font-size:11px}
+.tool{font-size:11px}
+.mitre{font-family:var(--mono);font-size:10.5px;color:var(--blue);white-space:nowrap}
+select.st{font-family:var(--mono);font-size:10.5px;border-radius:4px;padding:4px 6px;border:1px solid var(--line);background:var(--panel3);color:var(--text);cursor:pointer;width:100%}
+select.st.covered{border-color:var(--accent);color:var(--accent)}
+select.st.partial{border-color:var(--amber);color:var(--amber)}
+select.st.gap{border-color:var(--red);color:var(--red)}
+select.st.na{border-color:var(--faint);color:var(--faint)}
+
+.legend{margin-top:8px;font-size:11px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+.note{margin-top:34px;border:1px solid var(--line);border-left:3px solid var(--blue);background:linear-gradient(135deg,rgba(57,160,255,.05),transparent 75%);border-radius:5px;padding:16px 18px;font-size:12.5px}
+.note b{color:var(--blue)}
+
+footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:11px;letter-spacing:.08em}
+footer .lg2{font-family:var(--disp);color:var(--accent);font-size:14px;letter-spacing:.3em;text-transform:uppercase}
+footer .v{margin-top:6px;color:var(--faint)}
+@media(max-width:880px){.cov-grid{grid-template-columns:repeat(3,1fr)}.wrap{padding:0 12px 120px}td,th{font-size:11px;padding:7px}}
+@media print{.dash{position:static}select.st{-webkit-appearance:none;appearance:none}button{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Coverage Worksheet · Blue Team Reference<span class="dot"></span></div>
+  <h1>CSF Detection<br><span class="g">Coverage Map</span></h1>
+  <p class="sub">Маппинг функций и категорий NIST CSF 2.0 на конкретные детектирующие и реагирующие use-case'ы: источник данных, типовой класс инструмента и техника противника по MITRE ATT&CK. Статус покрытия редактируется на месте — рабочий инструмент для выявления пробелов детектирования и подготовки к аудиту.</p>
+  <div class="intro">
+    <b>Стек-агностично.</b> Колонка «Класс инструмента» указывает <em>категорию</em> системы (SIEM, EDR/XDR, NDR, SOAR, IdP, сканер уязвимостей и т.д.), а не конкретный продукт. Подставьте свой стек. Статусы хранятся локально в браузере; пробелы (Gap) после заполнения образуют готовый backlog для detection engineering.
+  </div>
+</header>
+
+<div class="dash">
+  <div class="cov-grid">
+    <div class="cov total"><div class="n" id="cTotal">0</div><div class="l">всего UC</div></div>
+    <div class="cov covered"><div class="n" id="cCov">0</div><div class="l">covered</div></div>
+    <div class="cov partial"><div class="n" id="cPart">0</div><div class="l">partial</div></div>
+    <div class="cov gap"><div class="n" id="cGap">0</div><div class="l">gap</div></div>
+    <div class="cov na"><div class="n" id="cNa">0</div><div class="l">n/a</div></div>
+  </div>
+  <div class="covbar" id="covbar"></div>
+  <div class="dash-actions">
+    <button id="exportBtn">⧉ Экспорт CSV</button>
+    <button id="resetBtn">↺ Сбросить статусы</button>
+    <span class="saved" id="savedMsg">● сохранено</span>
+  </div>
+</div>
+
+<div class="legend">
+  <span><i style="background:var(--accent)"></i>Covered — детект работает и протестирован</span>
+  <span><i style="background:var(--amber)"></i>Partial — частичное покрытие / не оттюнено</span>
+  <span><i style="background:var(--red)"></i>Gap — пробел, нет детекта</span>
+  <span><i style="background:var(--faint)"></i>N/A — не применимо к инфре</span>
+</div>
+
+<div id="tables"></div>
+
+<div class="note">
+  <b>Как пользоваться.</b> Coverage-карта — не замена каталогу детектов, а слой управления над ним: она показывает, какие use-case'ы CSF×MITRE закрыты, а какие нет, и на языке функций. Проходите сверху вниз, выставляйте статус по каждой строке. Доля Gap по функциям Detect и Respond — приоритетный индикатор: это ядро SOC. Перечень use-case'ов — стартовый набор, расширяйте под свою модель угроз и релевантные группировки.
+</div>
+
+<footer>
+  <div class="lg2">ZavetSec</div>
+  <p style="margin-top:9px">CSF Detection Coverage Map · NIST CSF 2.0 × MITRE ATT&CK · стек-агностичный воркшит</p>
+  <p class="v">v1.0 · статусы хранятся только в вашем браузере · MIT</p>
+</footer>
+
+</div>
+
+<script>
+const DATA = [
+  { fn:'DE', name:'Detect — Обнаружение', cls:'de', tag:'tag-de',
+    desc:'Ядро SOC. Покрытие телеметрией (DE.CM) и анализ событий с корреляцией (DE.AE). Здесь максимальная плотность use-case\u2019ов.',
+    rows:[
+      ['DE.CM','Телеметрия процессов и поведения хостов','Endpoint sensor','EDR / XDR','T1059, T1055'],
+      ['DE.CM','Аутентификация и логоны (success/fail)','Журналы ОС / контроллер домена','SIEM','T1110, T1078'],
+      ['DE.CM','Изменения привилегий и членства в привилегированных группах','Security log каталога','SIEM','T1098, T1484'],
+      ['DE.CM','Сетевой east-west трафик и аномалии соединений','NetFlow / зеркалирование','NDR','T1021, T1071'],
+      ['DE.CM','Активность веб-приложений и WAF-события','Логи веб-сервера / WAF','SIEM + WAF','T1190, T1505'],
+      ['DE.CM','Создание/изменение механизмов персистентности','Endpoint sensor / аудит ОС','EDR / XDR','T1543, T1547, T1053'],
+      ['DE.AE','Корреляция многоисточниковых цепочек атаки','Нормализованные события','SIEM correlation','—'],
+      ['DE.AE','Ретроспективный анализ по новым IoC/правилам','Хранилище событий','Retrospective correlation','—'],
+      ['DE.AE','Маппинг алертов на технику противника','Каталог детектов','SIEM + MITRE-маппинг','—'],
+      ['DE.AE','Отсев и тюнинг ложных срабатываний','Процесс detection eng.','Detection engineering','—'],
+      ['DE.CM','Детект массового изменения файлов (ранний ransomware)','Endpoint / FIM','EDR anti-ransomware','T1486'],
+      ['DE.CM','Удаление теневых копий / отключение защиты','Endpoint / command-line','EDR / XDR','T1490, T1562']
+    ]},
+  { fn:'RS', name:'Respond — Реагирование', cls:'rs', tag:'tag-rs',
+    desc:'Ядро SOC. Управление инцидентом (RS.MA), анализ (RS.AN), коммуникация (RS.CO), локализация (RS.MI).',
+    rows:[
+      ['RS.MA','Триаж и классификация инцидента по критичности','Тикет-система / оркестратор','SOAR / ticketing','—'],
+      ['RS.MA','Назначение и маршрутизация по L1/L2/L3','Тикет-система','Ticketing','—'],
+      ['RS.AN','Сбор и сохранение артефактов с хоста','Live-сбор','Triage collector','—'],
+      ['RS.AN','Разбор журналов событий скомпрометированного хоста','Журналы событий','Log/EVTX analysis','—'],
+      ['RS.AN','Определение scope и корневой причины','Timeline по SIEM/EDR','SIEM + EDR','—'],
+      ['RS.MI','Изоляция скомпрометированного хоста','Network isolation агента','EDR / XDR','M1037'],
+      ['RS.MI','Блокировка C2 / egress на сетевом уровне','Политики периметра','FW / NGFW','—'],
+      ['RS.MI','Блокировка/сброс скомпрометированных учёток','Каталог / IdP','IdP / directory','—'],
+      ['RS.CO','Эскалация и нотификация стейкхолдеров','Матрица коммуникаций','Регламент эскалации','—'],
+      ['RS.CO','Уведомление в регуляторные сроки (при необходимости)','Юр./комплаенс','Внешний процесс','—']
+    ]},
+  { fn:'ID', name:'Identify — Идентификация', cls:'id', tag:'tag-id',
+    desc:'Инвентаризация (ID.AM) и оценка риска (ID.RA). Слепые зоны здесь = слепые зоны детектирования.',
+    rows:[
+      ['ID.AM','Сверка CMDB ↔ источники логов (актив без телеметрии)','CMDB + SIEM','SIEM vs CMDB','—'],
+      ['ID.AM','Обнаружение теневых активов по трафику/логам','SIEM / NDR','SIEM + сетевой инвентарь','—'],
+      ['ID.AM','Сетевая инвентаризация и карта доступности','Активный скан','Network scanner','—'],
+      ['ID.RA','Приоритизация уязвимостей критичных активов','Сканер уязвимостей','Vulnerability scanner','T1190'],
+      ['ID.RA','Хэш-триаж индикаторов (репутация файлов)','Threat intel','TI / hash lookup','—']
+    ]},
+  { fn:'PR', name:'Protect — Защита', cls:'pr', tag:'tag-pr',
+    desc:'SOC задаёт требования к наблюдаемости и валидирует контроли. Hardening и identity-контроль должны быть видимы в SIEM.',
+    rows:[
+      ['PR.PS','Контроль соответствия hardening-baseline (config drift)','Конфиг-аудит','Config audit + SIEM','T1562'],
+      ['PR.AA','Мониторинг здоровья MFA и обхода аутентификации','IdP / контроллер домена','SIEM','T1556, T1621'],
+      ['PR.PS','Состояние и целостность защитных агентов (агент жив?)','Health-телеметрия','EDR management','T1562.001'],
+      ['PR.AA','Аудит привилегированных доступов','Каталог / IdP','AD/IdP audit','T1078.002'],
+      ['PR.IR','Наблюдаемость межсегментного трафика','Точки контроля сети','NDR / сетевые сенсоры','T1021']
+    ]},
+  { fn:'RC', name:'Recover — Восстановление', cls:'rc', tag:'tag-rc',
+    desc:'Валидация чистоты восстановленной среды и цикл lessons learned → новые детекты (замыкание колеса).',
+    rows:[
+      ['RC.RP','Валидация отсутствия персистентности после восстановления','Endpoint / повторный триаж','EDR + Triage','T1543, T1547'],
+      ['RC.RP','Проверка целостности и наличия offline-бэкапа','Бэкап-система','Backup / DR','—'],
+      ['RC.CO','Координация статусов восстановления','Матрица коммуникаций','Регламент','—'],
+      ['RC.RP','Перевод выводов разбора в новые детекты','Detection backlog','SIEM / каталог use-case','—'],
+      ['RC.RP','Учёт повторных инцидентов одного типа','Метрики SOC','SOC metrics (MTTD/MTTR)','—']
+    ]}
+];
+
+const STORE='zavetsec_csf_coverage_public_v1';
+const STATUSES=['—','covered','partial','gap','na'];
+const LABEL={'—':'— выбрать','covered':'Covered','partial':'Partial','gap':'Gap','na':'N/A'};
+let state={};
+function id(fn,i){return fn+'_'+i;}
+function load(){ try{const r=localStorage.getItem(STORE); if(r)state=JSON.parse(r);}catch(e){state={};} }
+function save(){ try{localStorage.setItem(STORE,JSON.stringify(state)); const m=document.getElementById('savedMsg');m.classList.add('show');clearTimeout(window.__s);window.__s=setTimeout(()=>m.classList.remove('show'),1100);}catch(e){} }
+
+function build(){
+  const root=document.getElementById('tables');
+  DATA.forEach(grp=>{
+    const h=document.createElement('h2'); h.className='fn fn-'+grp.cls;
+    h.innerHTML=`<span class="fn-${grp.cls}">${grp.fn}</span> ${grp.name} <span class="tag ${grp.tag}">${grp.rows.length} UC</span>`;
+    root.appendChild(h);
+    const d=document.createElement('div'); d.className='fn-desc'; d.textContent=grp.desc; root.appendChild(d);
+    const t=document.createElement('table');
+    t.innerHTML=`<thead><tr><th style="width:62px">CSF</th><th>Use-case</th><th style="width:160px">Источник данных</th><th style="width:180px">Класс инструмента</th><th style="width:96px">MITRE</th><th style="width:120px">Статус</th></tr></thead>`;
+    const tb=document.createElement('tbody');
+    grp.rows.forEach((r,i)=>{
+      const key=id(grp.fn,i); const cur=state[key]||'—';
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="cat">${r[0]}</td><td class="uc">${r[1]}</td><td class="src">${r[2]}</td><td class="tool">${r[3]}</td><td class="mitre">${r[4]}</td><td></td>`;
+      const sel=document.createElement('select'); sel.className='st '+(cur!=='—'?cur:'');
+      STATUSES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=LABEL[s];if(s===cur)o.selected=true;sel.appendChild(o);});
+      sel.addEventListener('change',()=>{ state[key]=sel.value; sel.className='st '+(sel.value!=='—'?sel.value:''); save(); summary(); });
+      tr.lastElementChild.appendChild(sel);
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb); root.appendChild(t);
+  });
+}
+function summary(){
+  let tot=0,cov=0,part=0,gap=0,na=0;
+  DATA.forEach(grp=>grp.rows.forEach((r,i)=>{ tot++; const s=state[id(grp.fn,i)]||'—';
+    if(s==='covered')cov++; else if(s==='partial')part++; else if(s==='gap')gap++; else if(s==='na')na++; }));
+  document.getElementById('cTotal').textContent=tot;
+  document.getElementById('cCov').textContent=cov;
+  document.getElementById('cPart').textContent=part;
+  document.getElementById('cGap').textContent=gap;
+  document.getElementById('cNa').textContent=na;
+  const bar=document.getElementById('covbar');
+  const seg=(n,c)=>n?`<i style="width:${n/tot*100}%;background:${c}"></i>`:'';
+  bar.innerHTML=seg(cov,'var(--accent)')+seg(part,'var(--amber)')+seg(gap,'var(--red)')+seg(na,'var(--faint)');
+}
+function exportCSV(){
+  let rows=[['CSF','Use-case','Источник','Класс инструмента','MITRE','Статус']];
+  DATA.forEach(grp=>grp.rows.forEach((r,i)=>{ rows.push([r[0],r[1],r[2],r[3],r[4],LABEL[state[id(grp.fn,i)]||'—']]); }));
+  const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='csf-coverage.csv'; a.click();
+}
+function reset(){ if(!confirm('Сбросить все статусы покрытия?'))return; state={}; save();
+  document.querySelectorAll('select.st').forEach(s=>{s.value='—';s.className='st';}); summary(); }
+
+load(); build(); summary();
+document.getElementById('exportBtn').addEventListener('click',exportCSV);
+document.getElementById('resetBtn').addEventListener('click',reset);
+</script>
+</body>
+</html>

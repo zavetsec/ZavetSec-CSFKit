@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIST CSF 2.0 — Операционная модель SOC</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0a0d10; --panel:#0d1117; --panel2:#11161d; --panel3:#070a0d;
+  --accent:#00ff88; --accent-dim:#00b863; --accent-deep:#0a3d2a;
+  --text:#c9d4de; --muted:#6b7986; --faint:#46525d; --line:#1c252e;
+  --red:#ff4d5e; --amber:#ffb02e; --blue:#39a0ff; --purple:#b18cff;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --disp:'Rajdhani',-apple-system,system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:15px;line-height:1.72;overflow-x:hidden;position:relative}
+body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,255,136,.022) 0,rgba(0,255,136,.022) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:overlay;opacity:.5}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(900px 600px at 16% -5%,rgba(0,255,136,.08),transparent 60%),
+             radial-gradient(760px 520px at 96% 6%,rgba(57,160,255,.045),transparent 55%)}
+.wrap{max-width:1000px;margin:0 auto;padding:0 22px 130px}
+
+/* header */
+header{padding:70px 0 40px;border-bottom:1px solid var(--line);position:relative}
+.eyebrow{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--accent);margin-bottom:22px;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--accent)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 1.8s infinite ease-in-out;margin-left:2px}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+h1{font-family:var(--disp);font-weight:700;font-size:clamp(36px,6.5vw,68px);line-height:1;letter-spacing:-.5px;color:#eef4f8;text-transform:uppercase}
+h1 .g{color:var(--accent);text-shadow:0 0 24px rgba(0,255,136,.35)}
+.sub{margin-top:20px;color:var(--muted);font-size:14px;max-width:720px;line-height:1.7}
+.meta{margin-top:28px;display:flex;flex-wrap:wrap;gap:10px}
+.tag{font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);background:var(--panel2);color:var(--muted);padding:5px 11px;border-radius:3px}
+.tag b{color:var(--accent);font-weight:500}
+
+/* abstract / callout */
+.lead{margin:38px 0 0;border:1px solid var(--line);border-left:3px solid var(--accent);background:linear-gradient(135deg,rgba(0,255,136,.05),transparent 70%);padding:22px 26px;border-radius:4px}
+.lead p{font-size:13.5px;color:var(--text);margin:8px 0}
+.lead p:first-child{margin-top:0}
+
+/* the wheel */
+.wheel-block{margin:46px 0 8px;display:flex;gap:34px;align-items:center;flex-wrap:wrap;justify-content:center}
+.wheel-svg{flex:0 0 320px}
+.wheel-legend{flex:1;min-width:260px}
+.wheel-legend h4{margin-top:0}
+.legend-row{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.legend-row:last-child{border-bottom:none}
+.swatch{width:13px;height:13px;border-radius:3px;flex-shrink:0}
+.legend-row b{color:#eef4f8;font-weight:600;font-family:var(--disp);text-transform:uppercase;letter-spacing:.04em;min-width:78px;display:inline-block}
+.legend-row span{color:var(--muted);font-size:12px}
+
+/* TOC */
+nav.toc{margin:44px 0 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);overflow:hidden}
+nav.toc .toc-h{padding:14px 20px;border-bottom:1px solid var(--line);font-family:var(--disp);text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--muted);font-weight:600}
+nav.toc ol{list-style:none}
+nav.toc li{border-bottom:1px solid var(--line)}
+nav.toc li:last-child{border-bottom:none}
+nav.toc a{display:flex;gap:14px;padding:12px 20px;text-decoration:none;color:var(--text);font-size:13.5px;transition:.15s;align-items:baseline}
+nav.toc a:hover{background:var(--panel2);color:var(--accent)}
+nav.toc a .n{color:var(--accent-dim);font-weight:700;font-size:12px;min-width:34px;font-family:var(--disp)}
+nav.toc a .d{margin-left:auto;color:var(--faint);font-size:11px}
+
+/* sections */
+section{margin-top:62px;scroll-margin-top:20px}
+.sec-head{display:flex;align-items:flex-start;gap:20px;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.sec-num{font-family:var(--disp);font-weight:700;font-size:46px;line-height:.82;color:var(--accent);text-shadow:0 0 16px rgba(0,255,136,.3);min-width:70px}
+.sec-titles{flex:1}
+.sec-titles h2{font-family:var(--disp);font-weight:600;text-transform:uppercase;letter-spacing:.02em;font-size:25px;color:#eef4f8;line-height:1.08}
+.sec-titles .code{margin-top:6px;font-size:12px;color:var(--accent-dim);letter-spacing:.1em}
+.sec-titles .q{margin-top:6px;font-size:13px;color:var(--muted)}
+
+h3{font-family:var(--disp);text-transform:uppercase;letter-spacing:.05em;font-size:18px;color:#eef4f8;margin:30px 0 12px;font-weight:600}
+h4{font-family:var(--disp);text-transform:uppercase;letter-spacing:.08em;font-size:14px;color:var(--accent);margin:24px 0 11px;font-weight:600;display:flex;align-items:center;gap:9px}
+h4::before{content:"▹";color:var(--accent-dim);font-size:13px}
+p{margin:12px 0;font-size:14px}
+strong{color:#eef4f8;font-weight:500}
+.text-acc{color:var(--accent)} .text-amber{color:var(--amber)} .text-blue{color:var(--blue)}
+ul,ol.steps{margin:12px 0 12px 4px;list-style:none}
+li{padding:5px 0 5px 22px;position:relative;font-size:13.5px}
+ul li::before{content:"▪";position:absolute;left:2px;color:var(--accent-dim)}
+ol.steps{counter-reset:s}
+ol.steps li{counter-increment:s;padding-left:34px}
+ol.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;color:var(--accent-dim);font-weight:700;font-size:12px;font-family:var(--disp)}
+code{font-family:var(--mono);background:var(--panel2);color:var(--accent);padding:2px 6px;border-radius:3px;font-size:12.5px;border:1px solid var(--line)}
+
+/* function block accent strip */
+.fn-strip{display:inline-flex;align-items:center;gap:9px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:5px 12px;border-radius:3px;margin-bottom:4px;font-family:var(--disp);font-weight:600}
+.fn-gv{background:rgba(177,140,255,.12);color:var(--purple);border:1px solid rgba(177,140,255,.3)}
+.fn-id{background:rgba(57,160,255,.12);color:var(--blue);border:1px solid rgba(57,160,255,.3)}
+.fn-pr{background:rgba(0,255,136,.1);color:var(--accent);border:1px solid rgba(0,255,136,.28)}
+.fn-de{background:rgba(255,176,46,.12);color:var(--amber);border:1px solid rgba(255,176,46,.3)}
+.fn-rs{background:rgba(255,77,94,.12);color:var(--red);border:1px solid rgba(255,77,94,.3)}
+.fn-rc{background:rgba(0,255,136,.08);color:var(--accent-dim);border:1px solid rgba(0,255,136,.2)}
+
+/* boxes */
+.box{border-radius:5px;padding:16px 18px;margin:18px 0;border:1px solid var(--line);background:var(--panel)}
+.box .bh{font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;font-size:12px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.box p{margin:6px 0;font-size:13px}
+.box.gold{border-left:3px solid var(--accent);background:linear-gradient(135deg,rgba(0,255,136,.05),transparent 75%)}
+.box.gold .bh{color:var(--accent)}
+.box.note{border-left:3px solid var(--blue);background:linear-gradient(135deg,rgba(57,160,255,.05),transparent 75%)}
+.box.note .bh{color:var(--blue)}
+.box.warn{border-left:3px solid var(--amber);background:linear-gradient(135deg,rgba(255,176,46,.05),transparent 75%)}
+.box.warn .bh{color:var(--amber)}
+
+/* tables */
+table{width:100%;border-collapse:collapse;margin:18px 0;font-size:12.5px}
+th{background:var(--panel2);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;text-align:left;padding:10px 13px;border:1px solid var(--line);font-weight:600;font-family:var(--disp)}
+td{padding:10px 13px;border:1px solid var(--line);vertical-align:top;color:var(--text)}
+tr:nth-child(even) td{background:rgba(255,255,255,.012)}
+td b{color:#eef4f8;font-weight:500}
+.cmono{font-family:var(--mono);color:var(--accent-dim);font-size:11.5px;white-space:nowrap}
+
+/* code block */
+pre{background:var(--panel3);border:1px solid var(--line);border-left:3px solid var(--accent-dim);border-radius:5px;padding:14px 16px;overflow-x:auto;margin:14px 0;font-size:12.5px;line-height:1.6}
+pre code{background:none;border:none;padding:0;color:var(--text)}
+.cmt{color:var(--muted)} .kw{color:var(--blue)} .fnn{color:var(--accent)}
+
+/* maturity ladder */
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}
+.rung{border:1px solid var(--line);border-radius:5px;padding:12px;background:var(--panel)}
+.rung .t{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.06em;margin-bottom:6px}
+.rung .lv{font-size:10px;color:var(--faint);letter-spacing:.1em;margin-bottom:6px}
+.rung p{font-size:11.5px;color:var(--muted);margin:0;line-height:1.5}
+.rung.t1{border-top:2px solid var(--red)} .rung.t1 .t{color:var(--red)}
+.rung.t2{border-top:2px solid var(--amber)} .rung.t2 .t{color:var(--amber)}
+.rung.t3{border-top:2px solid var(--blue)} .rung.t3 .t{color:var(--blue)}
+.rung.t4{border-top:2px solid var(--accent)} .rung.t4 .t{color:var(--accent)}
+
+/* metric chips */
+.metrics{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.metric{border:1px solid var(--line);background:var(--panel2);border-radius:4px;padding:6px 11px;font-size:11.5px;color:var(--text)}
+.metric b{color:var(--accent);font-family:var(--disp);letter-spacing:.04em}
+
+/* phase roadmap */
+.phase{border:1px solid var(--line);border-left:3px solid var(--accent-dim);border-radius:5px;background:var(--panel);padding:16px 18px;margin:14px 0;position:relative}
+.phase .ph{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+.phase .pn{font-family:var(--disp);font-weight:700;color:var(--accent);font-size:13px;letter-spacing:.08em}
+.phase .pt{font-family:var(--disp);font-weight:600;color:#eef4f8;font-size:16px;text-transform:uppercase;letter-spacing:.03em}
+.phase .pw{margin-left:auto;font-size:10px;color:var(--faint);letter-spacing:.1em;text-transform:uppercase}
+
+footer{margin-top:80px;padding-top:26px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:11px;letter-spacing:.1em}
+footer .lg{font-family:var(--disp);color:var(--accent);font-size:15px;letter-spacing:.32em;text-transform:uppercase}
+footer .v{margin-top:8px;color:var(--faint)}
+
+@media(max-width:680px){
+  .sec-num{font-size:34px;min-width:46px}.sec-head{gap:12px}
+  .ladder{grid-template-columns:1fr 1fr}
+  .wheel-svg{flex-basis:260px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Operational Framework · Blue Team Reference<span class="dot"></span></div>
+  <h1>NIST CSF 2.0<br><span class="g">для SOC</span></h1>
+  <p class="sub">Операционная модель: как наложить шесть функций NIST Cybersecurity Framework 2.0 на повседневную работу Security Operations Center. Каждая функция разобрана как набор зон ответственности, практических контролей, метрик и уровней зрелости — чтобы документ работал не как теория, а как чеклист внедрения и дорожная карта к совершенству.</p>
+  <div class="meta">
+    <span class="tag">Стандарт: <b>NIST CSF 2.0</b></span>
+    <span class="tag">Релиз: <b>февраль 2024</b></span>
+    <span class="tag">Функций: <b>6</b></span>
+    <span class="tag">Уровней зрелости: <b>4 (Tiers)</b></span>
+    <span class="tag">Привязка к стеку: <b>отсутствует</b></span>
+  </div>
+
+  <div class="lead">
+    <p><strong>Зачем этот документ.</strong> «Колёсико NIST» — это NIST Cybersecurity Framework, набор функций, расположенных по кругу. Сам по себе CSF — не технический стандарт и не чеклист настроек: это <strong>язык управления киберрисками</strong>, на котором удобно описывать, что именно делает организация и насколько зрело. Ценность для SOC в том, что он связывает разрозненные процессы (детектирование, реагирование, восстановление, отчётность) в единый цикл с понятными зонами ответственности и измеримой зрелостью.</p>
+    <p><strong>Как пользоваться.</strong> Документ обезличен и не привязан к конкретным продуктам — везде указаны <em>классы</em> систем (SIEM, EDR/XDR, NDR, SOAR, IdP, CMDB, тикет-система). Подставляйте свой стек. Для каждой функции есть: суть, официальные категории с кодами, зона ответственности SOC, практическое внедрение, метрики и лестница зрелости от хаоса до адаптивности.</p>
+  </div>
+</header>
+
+<!-- WHEEL -->
+<div class="wheel-block">
+  <div class="wheel-svg">
+    <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Колесо NIST CSF 2.0">
+      <defs>
+        <radialGradient id="cg" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#0a3d2a"/><stop offset="100%" stop-color="#070a0d"/>
+        </radialGradient>
+      </defs>
+      <!-- outer ring slices (5 functions) -->
+      <g stroke="#070a0d" stroke-width="2" transform="translate(160,160)">
+        <!-- each slice: 72deg. Identify top, going clockwise -->
+        <path d="M0,0 L0,-130 A130,130 0 0,1 123.6,-40.2 Z" fill="#39a0ff" opacity="0.85"/>
+        <path d="M0,0 L123.6,-40.2 A130,130 0 0,1 76.4,105.2 Z" fill="#00ff88" opacity="0.85"/>
+        <path d="M0,0 L76.4,105.2 A130,130 0 0,1 -76.4,105.2 Z" fill="#ffb02e" opacity="0.85"/>
+        <path d="M0,0 L-76.4,105.2 A130,130 0 0,1 -123.6,-40.2 Z" fill="#ff4d5e" opacity="0.85"/>
+        <path d="M0,0 L-123.6,-40.2 A130,130 0 0,1 0,-130 Z" fill="#00b863" opacity="0.85"/>
+      </g>
+      <!-- center govern -->
+      <circle cx="160" cy="160" r="62" fill="url(#cg)" stroke="#b18cff" stroke-width="2"/>
+      <!-- labels -->
+      <g font-family="Rajdhani,sans-serif" font-weight="700" fill="#0a0d10" font-size="13" text-anchor="middle" letter-spacing="0.5">
+        <text x="160" y="58" transform="rotate(36 160 58)">IDENTIFY</text>
+        <text x="248" y="135" transform="rotate(108 248 135)">PROTECT</text>
+        <text x="160" y="262" transform="rotate(180 160 262)">DETECT</text>
+        <text x="72" y="135" transform="rotate(252 72 135)">RESPOND</text>
+        <text x="72" y="92" transform="rotate(324 72 92)">RECOVER</text>
+      </g>
+      <text x="160" y="156" font-family="Rajdhani,sans-serif" font-weight="700" fill="#b18cff" font-size="17" text-anchor="middle" letter-spacing="1">GOVERN</text>
+      <text x="160" y="174" font-family="JetBrains Mono,monospace" fill="#6b7986" font-size="8" text-anchor="middle" letter-spacing="2">CSF 2.0 · CORE</text>
+    </svg>
+  </div>
+  <div class="wheel-legend">
+    <h4>Шесть функций колеса</h4>
+    <div class="legend-row"><span class="swatch" style="background:#b18cff"></span><b>Govern</b><span>Управление, политики, риск-стратегия. Новое в 2.0 — в центре колеса.</span></div>
+    <div class="legend-row"><span class="swatch" style="background:#39a0ff"></span><b>Identify</b><span>Понимание активов, рисков, поверхности атаки.</span></div>
+    <div class="legend-row"><span class="swatch" style="background:#00ff88"></span><b>Protect</b><span>Защитные меры и снижение вероятности инцидента.</span></div>
+    <div class="legend-row"><span class="swatch" style="background:#ffb02e"></span><b>Detect</b><span>Обнаружение событий и аномалий. Ядро SOC.</span></div>
+    <div class="legend-row"><span class="swatch" style="background:#ff4d5e"></span><b>Respond</b><span>Реагирование, локализация, коммуникация. Ядро SOC.</span></div>
+    <div class="legend-row"><span class="swatch" style="background:#00b863"></span><b>Recover</b><span>Восстановление работоспособности и извлечение уроков.</span></div>
+  </div>
+</div>
+<div class="box note">
+  <div class="bh">◆ Почему Govern в центре</div>
+  <p>В версии 1.1 функций было пять. В <strong>CSF 2.0 (февраль 2024)</strong> добавлена шестая — <strong>Govern</strong>, и помещена она не в кольцо, а в <em>центр</em>: управление пронизывает все остальные функции. Решения о приоритетах, бюджете, рисках и ответственности из Govern определяют, как наполняются Identify→Recover. Для SOC это означает, что без управленческого контура (метрики наверх, риск-ориентированные приоритеты) технические функции работают вхолостую.</p>
+</div>
+
+<!-- TOC -->
+<nav class="toc">
+  <div class="toc-h">// Структура документа</div>
+  <ol>
+    <li><a href="#tiers"><span class="n">00</span> Модель зрелости: четыре Tier'а <span class="d">как мерить «совершенство»</span></a></li>
+    <li><a href="#govern"><span class="n">GV</span> Govern — управление <span class="d">контур управления SOC</span></a></li>
+    <li><a href="#identify"><span class="n">ID</span> Identify — идентификация <span class="d">активы и поверхность атаки</span></a></li>
+    <li><a href="#protect"><span class="n">PR</span> Protect — защита <span class="d">baseline и снижение риска</span></a></li>
+    <li><a href="#detect"><span class="n">DE</span> Detect — обнаружение <span class="d">ядро SOC</span></a></li>
+    <li><a href="#respond"><span class="n">RS</span> Respond — реагирование <span class="d">ядро SOC</span></a></li>
+    <li><a href="#recover"><span class="n">RC</span> Recover — восстановление <span class="d">возврат к норме + уроки</span></a></li>
+    <li><a href="#roadmap"><span class="n">07</span> Дорожная карта внедрения <span class="d">фазы 0–4</span></a></li>
+    <li><a href="#metrics"><span class="n">08</span> Сводный каталог метрик <span class="d">что выносить в Govern</span></a></li>
+    <li><a href="#raci"><span class="n">09</span> Разграничение SOC / IT / бизнес <span class="d">кто за что отвечает</span></a></li>
+    <li><a href="#assess"><span class="n">10</span> Чеклист самооценки <span class="d">где вы сейчас</span></a></li>
+  </ol>
+</nav>
+
+<!-- ===== TIERS ===== -->
+<section id="tiers">
+  <div class="sec-head">
+    <div class="sec-num">00</div>
+    <div class="sec-titles">
+      <h2>Модель зрелости: четыре Tier'а</h2>
+      <div class="q">Как измерять движение «до совершенства» — единая шкала для всего документа</div>
+    </div>
+  </div>
+  <p>CSF определяет четыре <strong>Tier'а</strong> (уровня) — они описывают не «насколько защищены», а <strong>насколько зрелы и риск-ориентированы процессы</strong>. По всему документу для каждой функции дана лестница в этих терминах. Цель — не доползти до Tier 4 везде (это дорого и не всегда оправдано), а <strong>осознанно выбрать целевой уровень под риск-аппетит</strong> и закрыть разрыв.</p>
+  <div class="ladder">
+    <div class="rung t1"><div class="lv">TIER 1</div><div class="t">Partial</div><p>Процессы ad-hoc, реактивные. Нет регламентов, знание держится на людях. Риск осознаётся постфактум.</p></div>
+    <div class="rung t2"><div class="lv">TIER 2</div><div class="t">Risk Informed</div><p>Практики утверждены, но не стандартизованы по организации. Приоритеты учитывают риск, но непоследовательно.</p></div>
+    <div class="rung t3"><div class="lv">TIER 3</div><div class="t">Repeatable</div><p>Формализованные, документированные, повторяемые процессы. Регулярный пересмотр. Реакция на изменение угроз — системная.</p></div>
+    <div class="rung t4"><div class="lv">TIER 4</div><div class="t">Adaptive</div><p>Непрерывное улучшение на основе метрик и threat intel. Процессы адаптируются проактивно. Культура киберриска встроена.</p></div>
+  </div>
+  <div class="box gold">
+    <div class="bh">✓ Практический совет</div>
+    <p>Сначала оцените текущий уровень по каждой функции (раздел 10), затем зафиксируйте <strong>целевой</strong> уровень. Разница — это и есть ваш backlog внедрения. Для SOC реалистичная цель — <strong>Tier 3 по Detect/Respond</strong> (повторяемость критична) и Tier 2–3 по остальным функциям, с движением к Adaptive в зрелых направлениях.</p>
+  </div>
+</section>
+
+<!-- ===== GOVERN ===== -->
+<section id="govern">
+  <div class="sec-head">
+    <div class="sec-num" style="color:var(--purple);text-shadow:0 0 16px rgba(177,140,255,.3)">GV</div>
+    <div class="sec-titles">
+      <span class="fn-strip fn-gv">● Function 06 · Центр колеса</span>
+      <h2>Govern — управление</h2>
+      <div class="code">GV.OC · GV.RM · GV.RR · GV.PO · GV.OV · GV.SC</div>
+      <div class="q">Контур, который делает всю остальную работу SOC осмысленной и подотчётной</div>
+    </div>
+  </div>
+  <p>Govern отвечает на вопрос «<em>как организация принимает и контролирует решения о киберриске</em>». Для SOC это управленческая надстройка: чем мы занимаемся в порядке приоритета, кто за что отвечает, как мы отчитываемся наверх и как риск цепочки поставок влияет на нашу работу.</p>
+
+  <h4>Официальные категории</h4>
+  <table>
+    <tr><th>Код</th><th>Категория</th><th>Что это значит для SOC</th></tr>
+    <tr><td class="cmono">GV.OC</td><td><b>Organizational Context</b></td><td>Понимание миссии, критичных сервисов, юр./регуляторных обязательств — чтобы приоритеты детектирования били по тому, что важно бизнесу</td></tr>
+    <tr><td class="cmono">GV.RM</td><td><b>Risk Management Strategy</b></td><td>Риск-аппетит и толерантность; на их основе — целевые Tier'ы и SLA</td></tr>
+    <tr><td class="cmono">GV.RR</td><td><b>Roles & Responsibilities</b></td><td>Иерархия SOC (L1/L2/L3), эскалационные пути, полномочия на containment</td></tr>
+    <tr><td class="cmono">GV.PO</td><td><b>Policy</b></td><td>Политики мониторинга, реагирования, хранения логов, использования TI</td></tr>
+    <tr><td class="cmono">GV.OV</td><td><b>Oversight</b></td><td>Надзор: метрики и отчётность руководству, пересмотр стратегии</td></tr>
+    <tr><td class="cmono">GV.SC</td><td><b>Cybersecurity Supply Chain Risk Mgmt</b></td><td>Риски подрядчиков, MSSP, вендоров; мониторинг третьих сторон</td></tr>
+  </table>
+
+  <h4>Зона ответственности SOC</h4>
+  <p>SOC здесь не «владелец», а <strong>поставщик данных и исполнитель политик</strong>. Руководитель SOC переводит технические факты на язык риска для менеджмента и обратно — приоритеты менеджмента в use-case'ы и SLA.</p>
+
+  <h4>Практическое внедрение</h4>
+  <ol class="steps">
+    <li>Сформулировать <strong>устав SOC</strong>: миссия, scope мониторинга, зоны ответственности, что вне scope.</li>
+    <li>Описать <strong>иерархию ролей</strong> L1/L2/L3 + дежурный инженер + руководитель, с матрицей полномочий (кто вправе изолировать хост, кто — отключить сервис).</li>
+    <li>Утвердить <strong>политику эскалации</strong> и SLA по критичности инцидента (привязать к риск-аппетиту из GV.RM).</li>
+    <li>Завести <strong>регламент отчётности</strong>: набор метрик наверх + периодичность (операционные — еженедельно, управленческие — ежемесячно/квартально).</li>
+    <li>Включить <strong>поставщиков в модель угроз</strong> (GV.SC): мониторинг доступов подрядчиков, контроль MSSP, требования к логированию у третьих сторон.</li>
+  </ol>
+
+  <h4>Метрики функции</h4>
+  <div class="metrics">
+    <span class="metric"><b>%</b> покрытия критичных сервисов мониторингом</span>
+    <span class="metric"><b>SLA</b> соблюдение по критичности</span>
+    <span class="metric"><b>Δ</b> разрыв до целевого Tier'а</span>
+    <span class="metric"><b>#</b> рисков 3-й стороны под наблюдением</span>
+    <span class="metric"><b>ч</b> регулярность пересмотра политик</span>
+  </div>
+
+  <h4>Лестница зрелости</h4>
+  <div class="ladder">
+    <div class="rung t1"><div class="lv">TIER 1</div><div class="t">Partial</div><p>Нет устава SOC, роли размыты, отчётность от случая к случаю.</p></div>
+    <div class="rung t2"><div class="lv">TIER 2</div><div class="t">Risk Informed</div><p>Есть базовые политики и SLA, но не связаны с риск-аппетитом; отчётность нерегулярна.</p></div>
+    <div class="rung t3"><div class="lv">TIER 3</div><div class="t">Repeatable</div><p>Устав, RACI, SLA привязаны к рискам; регулярная отчётность с фиксированным набором метрик.</p></div>
+    <div class="rung t4"><div class="lv">TIER 4</div><div class="t">Adaptive</div><p>Метрики SOC влияют на риск-стратегию; приоритеты пересматриваются от данных и угроз непрерывно.</p></div>
+  </div>
+</section>
+
+<!-- ===== IDENTIFY ===== -->
+<section id="identify">
+  <div class="sec-head">
+    <div class="sec-num" style="color:var(--blue);text-shadow:0 0 16px rgba(57,160,255,.3)">ID</div>
+    <div class="sec-titles">
+      <span class="fn-strip fn-id">● Function 01</span>
+      <h2>Identify — идентификация</h2>
+      <div class="code">ID.AM · ID.RA · ID.IM</div>
+      <div class="q">Нельзя защищать и детектировать то, чего не видишь</div>
+    </div>
+  </div>
+  <p>Identify — фундамент. Это понимание того, <strong>что у вас есть, что из этого критично и какие риски этому угрожают</strong>. Для SOC слепые зоны инвентаризации напрямую превращаются в слепые зоны детектирования: актив, которого нет в CMDB, не покрыт логами, не мониторится, не эскалируется.</p>
+
+  <h4>Официальные категории</h4>
+  <table>
+    <tr><th>Код</th><th>Категория</th><th>Что это значит для SOC</th></tr>
+    <tr><td class="cmono">ID.AM</td><td><b>Asset Management</b></td><td>Инвентаризация: хосты, сервисы, данные, аккаунты, потоки данных. Источник истины о scope мониторинга</td></tr>
+    <tr><td class="cmono">ID.RA</td><td><b>Risk Assessment</b></td><td>Оценка угроз и уязвимостей; приоритизация активов по критичности и эксплуатируемости</td></tr>
+    <tr><td class="cmono">ID.IM</td><td><b>Improvement</b></td><td>Улучшение на основе извлечённых уроков, тестов, оценок (новое выделение в 2.0)</td></tr>
+  </table>
+
+  <h4>Зона ответственности SOC</h4>
+  <p>SOC — потребитель и одновременно валидатор инвентаризации. Через данные мониторинга SOC <strong>обнаруживает теневые активы</strong> (то, что генерирует трафик/логи, но отсутствует в CMDB) и возвращает их в учёт.</p>
+
+  <h4>Практическое внедрение</h4>
+  <ol class="steps">
+    <li>Связать <strong>CMDB ↔ источники логов</strong>: каждый критичный актив обязан иметь поставку телеметрии в SIEM. Расхождение = задача.</li>
+    <li>Построить <strong>карту поверхности атаки</strong>: внешние сервисы, точки входа, потоки данных, доверительные связи.</li>
+    <li>Приоритизировать активы по <strong>критичности для бизнеса</strong> (из GV.OC) — это потом задаёт уровни алертов и SLA.</li>
+    <li>Наладить <strong>обратную связь по теневым активам</strong>: SOC видит неучтённый источник → заводит в CMDB.</li>
+    <li>Привязать <strong>vulnerability management</strong>: уязвимости критичных активов → приоритет в детектировании эксплуатации.</li>
+  </ol>
+
+  <h4>Метрики функции</h4>
+  <div class="metrics">
+    <span class="metric"><b>%</b> активов с поставкой логов</span>
+    <span class="metric"><b>%</b> покрытия критичных активов</span>
+    <span class="metric"><b>#</b> теневых активов / месяц</span>
+    <span class="metric"><b>ч</b> актуальность CMDB</span>
+    <span class="metric"><b>%</b> критичных уязвимостей под детектом</span>
+  </div>
+
+  <h4>Лестница зрелости</h4>
+  <div class="ladder">
+    <div class="rung t1"><div class="lv">TIER 1</div><div class="t">Partial</div><p>Инвентаризация неполна и устарела; scope мониторинга — «что подключилось».</p></div>
+    <div class="rung t2"><div class="lv">TIER 2</div><div class="t">Risk Informed</div><p>CMDB есть, критичность размечена, но не связана с источниками логов.</p></div>
+    <div class="rung t3"><div class="lv">TIER 3</div><div class="t">Repeatable</div><p>CMDB ↔ логи синхронизированы; регулярный аудит покрытия; теневые активы отлавливаются.</p></div>
+    <div class="rung t4"><div class="lv">TIER 4</div><div class="t">Adaptive</div><p>Динамическая инвентаризация в реальном времени; покрытие автоматически валидируется телеметрией.</p></div>
+  </div>
+</section>
+
+<!-- ===== PROTECT ===== -->
+<section id="protect">
+  <div class="sec-head">
+    <div class="sec-num" style="color:var(--accent)">PR</div>
+    <div class="sec-titles">
+      <span class="fn-strip fn-pr">● Function 02</span>
+      <h2>Protect — защита</h2>
+      <div class="code">PR.AA · PR.AT · PR.DS · PR.PS · PR.IR</div>
+      <div class="q">Снижение вероятности и масштаба инцидента до того, как он произошёл</div>
+    </div>
+  </div>
+  <p>Protect — преимущественно зона IT и инженерии, но SOC участвует двумя способами: задаёт и валидирует <strong>защитный baseline</strong> и обеспечивает, чтобы защитные контроли были <strong>наблюдаемы</strong> (контроль без телеметрии бесполезен для детектирования).</p>
+
+  <h4>Официальные категории</h4>
+  <table>
+    <tr><th>Код</th><th>Категория</th><th>Что это значит для SOC</th></tr>
+    <tr><td class="cmono">PR.AA</td><td><b>Identity, Authentication & Access Control</b></td><td>Управление доступом, MFA, least privilege. SOC мониторит злоупотребление identity</td></tr>
+    <tr><td class="cmono">PR.AT</td><td><b>Awareness & Training</b></td><td>Обучение; SOC поставляет данные о реальных фишинг-кампаниях для тренировок</td></tr>
+    <tr><td class="cmono">PR.DS</td><td><b>Data Security</b></td><td>Шифрование, DLP, защита данных at-rest/in-transit</td></tr>
+    <tr><td class="cmono">PR.PS</td><td><b>Platform Security</b></td><td>Hardening, baseline-конфигурации, управление изменениями</td></tr>
+    <tr><td class="cmono">PR.IR</td><td><b>Technology Infrastructure Resilience</b></td><td>Сегментация, отказоустойчивость, защита от отказов</td></tr>
+  </table>
+
+  <h4>Зона ответственности SOC</h4>
+  <p>SOC не владеет внедрением защиты, но <strong>задаёт требования к наблюдаемости</strong> и валидирует эффективность контролей через детектирование. Hardening-baseline и сегментация должны проектироваться так, чтобы их нарушение было видимо в SIEM.</p>
+
+  <h4>Практическое внедрение</h4>
+  <ol class="steps">
+    <li>Согласовать с IT <strong>hardening-baseline</strong> и требовать, чтобы отклонения логировались (config drift = событие).</li>
+    <li>Обеспечить <strong>телеметрию identity</strong> (IdP, аутентификация, привилегированные операции) — основа детектов по компрометации учёток.</li>
+    <li>Заложить <strong>наблюдаемость сегментации</strong>: межсегментный трафик должен проходить через точки контроля с логами.</li>
+    <li>Поставлять в обучение (PR.AT) <strong>реальные TTP из своих инцидентов</strong> — обучение на актуальных угрозах эффективнее абстрактного.</li>
+    <li>Мониторить состояние <strong>защитных контролей</strong> (агент жив? DLP-политика применена? MFA не обойдена?) — деградация контроля = алерт.</li>
+  </ol>
+
+  <h4>Метрики функции</h4>
+  <div class="metrics">
+    <span class="metric"><b>%</b> хостов на baseline</span>
+    <span class="metric"><b>%</b> покрытия MFA</span>
+    <span class="metric"><b>#</b> config drift событий</span>
+    <span class="metric"><b>%</b> здоровья защитных агентов</span>
+    <span class="metric"><b>%</b> провалов фишинг-симуляций</span>
+  </div>
+
+  <h4>Лестница зрелости</h4>
+  <div class="ladder">
+    <div class="rung t1"><div class="lv">TIER 1</div><div class="t">Partial</div><p>Защита внедряется без оглядки на наблюдаемость; SOC узнаёт о контролях постфактум.</p></div>
+    <div class="rung t2"><div class="lv">TIER 2</div><div class="t">Risk Informed</div><p>Baseline есть, но отклонения не логируются системно; identity-телеметрия частична.</p></div>
+    <div class="rung t3"><div class="lv">TIER 3</div><div class="t">Repeatable</div><p>Контроли проектируются с наблюдаемостью; config drift и деградация контролей детектируются.</p></div>
+    <div class="rung t4"><div class="lv">TIER 4</div><div class="t">Adaptive</div><p>SOC валидирует эффективность контролей непрерывно (BAS, purple team); защита подстраивается под угрозы.</p></div>
+  </div>
+</section>
+
+<!-- ===== DETECT ===== -->
+<section id="detect">
+  <div class="sec-head">
+    <div class="sec-num" style="color:var(--amber);text-shadow:0 0 16px rgba(255,176,46,.3)">DE</div>
+    <div class="sec-titles">
+      <span class="fn-strip fn-de">● Function 03 · ЯДРО SOC</span>
+      <h2>Detect — обнаружение</h2>
+      <div class="code">DE.CM · DE.AE</div>
+      <div class="q">Главная функция SOC. Здесь живёт инженерия детектирования и threat hunting</div>
+    </div>
+  </div>
+  <p>Detect — сердце SOC. Это способность <strong>своевременно находить события и аномалии</strong> и понимать их значимость. Большая часть инженерной работы SOC (use-case'ы, корреляция, покрытие по матрице угроз, охота) ложится именно сюда.</p>
+
+  <h4>Официальные категории</h4>
+  <table>
+    <tr><th>Код</th><th>Категория</th><th>Что это значит для SOC</th></tr>
+    <tr><td class="cmono">DE.CM</td><td><b>Continuous Monitoring</b></td><td>Непрерывный мониторинг сети, хостов, identity, приложений, физической среды</td></tr>
+    <tr><td class="cmono">DE.AE</td><td><b>Adverse Event Analysis</b></td><td>Анализ событий: корреляция, определение значимости, отсев ложных срабатываний</td></tr>
+  </table>
+
+  <h4>Зона ответственности SOC</h4>
+  <p>Это <strong>прямая и основная</strong> зона. SOC владеет конвейером детектирования целиком: сбор телеметрии → нормализация → корреляция → детекты → триаж → алерт. Здесь же — detection engineering как дисциплина и threat hunting как проактивный слой.</p>
+
+  <h4>Практическое внедрение</h4>
+  <ol class="steps">
+    <li>Построить <strong>каталог use-case'ов</strong>, привязанный к матрице техник противника (покрытие по тактикам/техникам — измеримая величина).</li>
+    <li>Внедрить <strong>detection engineering как процесс</strong>: версионирование правил, тестирование, ревью, метрика качества (precision/recall детекта).</li>
+    <li>Наладить <strong>цикл снижения ложных срабатываний</strong>: каждый FP → разбор → тюнинг правила или подавление с обоснованием (не «выключить»).</li>
+    <li>Запустить <strong>threat hunting</strong> по гипотезам (TI-driven и поведенческий) — находки превращать в новые детекты.</li>
+    <li>Интегрировать <strong>threat intelligence</strong>: IoC и TTP актуализируют детекты; приоритет — по релевантным группировкам.</li>
+    <li>Измерять <strong>покрытие и пробелы</strong>: какие техники не детектируются вообще — это backlog инженерии.</li>
+  </ol>
+
+  <div class="box gold">
+    <div class="bh">✓ Принцип зрелости Detect</div>
+    <p>Зрелый Detect измеряется не количеством алертов, а <strong>покрытием релевантных техник × качеством детектов × скоростью обнаружения (MTTD)</strong>. Тысяча шумных правил хуже сотни точных с известным покрытием.</p>
+  </div>
+
+  <h4>Метрики функции</h4>
+  <div class="metrics">
+    <span class="metric"><b>MTTD</b> среднее время обнаружения</span>
+    <span class="metric"><b>%</b> покрытия техник противника</span>
+    <span class="metric"><b>FP-rate</b> доля ложных</span>
+    <span class="metric"><b>%</b> детектов с тестами</span>
+    <span class="metric"><b>#</b> гипотез hunting / период</span>
+    <span class="metric"><b>#</b> новых детектов из охоты</span>
+  </div>
+
+  <h4>Лестница зрелости</h4>
+  <div class="ladder">
+    <div class="rung t1"><div class="lv">TIER 1</div><div class="t">Partial</div><p>Дефолтные правила «из коробки», шум, нет понимания покрытия. Охоты нет.</p></div>
+    <div class="rung t2"><div class="lv">TIER 2</div><div class="t">Risk Informed</div><p>Use-case'ы под ключевые риски, ручной тюнинг FP, покрытие оценивается эпизодически.</p></div>
+    <div class="rung t3"><div class="lv">TIER 3</div><div class="t">Repeatable</div><p>Detection engineering как процесс: каталог, версии, тесты, измеримое покрытие, регулярная охота.</p></div>
+    <div class="rung t4"><div class="lv">TIER 4</div><div class="t">Adaptive</div><p>Детекты адаптируются от TI и результатов охоты непрерывно; покрытие валидируется эмуляцией атак.</p></div>
+  </div>
+</section>
+
+<!-- ===== RESPOND ===== -->
+<section id="respond">
+  <div class="sec-head">
+    <div class="sec-num" style="color:var(--red);text-shadow:0 0 16px rgba(255,77,94,.3)">RS</div>
+    <div class="sec-titles">
+      <span class="fn-strip fn-rs">● Function 04 · ЯДРО SOC</span>
+      <h2>Respond — реагирование</h2>
+      <div class="code">RS.MA · RS.AN · RS.CO · RS.MI</div>
+      <div class="q">Вторая ядровая функция SOC: от триажа до локализации и коммуникации</div>
+    </div>
+  </div>
+  <p>Respond — то, что происходит <strong>после</strong> срабатывания детекта: управление инцидентом, его анализ, коммуникация и локализация. Зрелость здесь измеряется не героизмом дежурных, а <strong>повторяемостью</strong>: плейбуки, оркестрация, чёткие роли.</p>
+
+  <h4>Официальные категории</h4>
+  <table>
+    <tr><th>Код</th><th>Категория</th><th>Что это значит для SOC</th></tr>
+    <tr><td class="cmono">RS.MA</td><td><b>Incident Management</b></td><td>Управление жизненным циклом инцидента: триаж, классификация, назначение</td></tr>
+    <tr><td class="cmono">RS.AN</td><td><b>Incident Analysis</b></td><td>Анализ: scope, корневая причина, сбор и сохранение артефактов (форензика)</td></tr>
+    <tr><td class="cmono">RS.CO</td><td><b>Reporting & Communication</b></td><td>Коммуникация со стейкхолдерами, эскалация, нотификации</td></tr>
+    <tr><td class="cmono">RS.MI</td><td><b>Incident Mitigation</b></td><td>Локализация и устранение: изоляция, блокировка, нейтрализация</td></tr>
+  </table>
+
+  <h4>Зона ответственности SOC</h4>
+  <p>Прямая зона. SOC владеет триажем, анализом и первичной локализацией. Граница ответственности — там, где требуются решения бизнеса (остановка сервиса, юридические нотификации): SOC готовит факты и рекомендации, решение принимается на уровне Govern.</p>
+
+  <h4>Практическое внедрение</h4>
+  <ol class="steps">
+    <li>Описать <strong>плейбуки</strong> на типовые сценарии (фишинг, компрометация учётки, вредонос, латеральное движение, эксфильтрация) — пошагово, с ролями и точками эскалации.</li>
+    <li>Внедрить <strong>классификацию инцидентов</strong> по критичности и привязать к ней SLA реагирования (из GV.RM).</li>
+    <li>Автоматизировать рутину через <strong>оркестрацию (SOAR-класс)</strong>: обогащение, типовые ответные действия, нотификации.</li>
+    <li>Стандартизировать <strong>сбор и сохранность артефактов</strong> (chain of custody) для возможной форензики и юридических последствий.</li>
+    <li>Прописать <strong>матрицу коммуникаций</strong>: кого, когда и в каком объёме уведомлять (внутри и наружу, включая регуляторные сроки).</li>
+    <li>Закрепить <strong>полномочия на containment</strong>: что L1/L2/L3 вправе делать без согласования, что требует эскалации.</li>
+  </ol>
+
+  <h4>Метрики функции</h4>
+  <div class="metrics">
+    <span class="metric"><b>MTTR</b> среднее время реагирования</span>
+    <span class="metric"><b>MTTC</b> время до локализации</span>
+    <span class="metric"><b>%</b> инцидентов по плейбуку</span>
+    <span class="metric"><b>%</b> автоматизированных действий</span>
+    <span class="metric"><b>SLA</b> соблюдение по критичности</span>
+    <span class="metric"><b>%</b> эскалаций в срок</span>
+  </div>
+
+  <h4>Лестница зрелости</h4>
+  <div class="ladder">
+    <div class="rung t1"><div class="lv">TIER 1</div><div class="t">Partial</div><p>Реагирование ad-hoc, без плейбуков; результат зависит от конкретного дежурного.</p></div>
+    <div class="rung t2"><div class="lv">TIER 2</div><div class="t">Risk Informed</div><p>Есть плейбуки на частые сценарии и SLA, но автоматизация минимальна, коммуникации непоследовательны.</p></div>
+    <div class="rung t3"><div class="lv">TIER 3</div><div class="t">Repeatable</div><p>Плейбуки покрывают основные сценарии, оркестрация рутины, матрица коммуникаций, артефакты сохраняются.</p></div>
+    <div class="rung t4"><div class="lv">TIER 4</div><div class="t">Adaptive</div><p>Плейбуки эволюционируют от разборов; широкая автоматизация; реагирование адаптируется под новые TTP.</p></div>
+  </div>
+</section>
+
+<!-- ===== RECOVER ===== -->
+<section id="recover">
+  <div class="sec-head">
+    <div class="sec-num" style="color:var(--accent-dim)">RC</div>
+    <div class="sec-titles">
+      <span class="fn-strip fn-rc">● Function 05</span>
+      <h2>Recover — восстановление</h2>
+      <div class="code">RC.RP · RC.CO</div>
+      <div class="q">Возврат к нормальной работе и превращение инцидента в улучшение</div>
+    </div>
+  </div>
+  <p>Recover — про <strong>восстановление работоспособности после инцидента</strong> и коммуникацию в ходе восстановления. Для SOC это в основном про координацию, валидацию «чисто ли» и, главное, <strong>цикл извлечения уроков</strong>, который замыкает колесо обратно на Identify и Detect.</p>
+
+  <h4>Официальные категории</h4>
+  <table>
+    <tr><th>Код</th><th>Категория</th><th>Что это значит для SOC</th></tr>
+    <tr><td class="cmono">RC.RP</td><td><b>Incident Recovery Plan Execution</b></td><td>Исполнение плана восстановления; валидация целостности и отсутствия закрепления</td></tr>
+    <tr><td class="cmono">RC.CO</td><td><b>Incident Recovery Communication</b></td><td>Коммуникация в процессе восстановления, координация со стейкхолдерами</td></tr>
+  </table>
+
+  <h4>Зона ответственности SOC</h4>
+  <p>Восстановлением сервисов обычно владеет IT, но SOC <strong>валидирует «чистоту»</strong> восстановленной среды (нет ли остаточного присутствия, бэкдоров, закрепления) и <strong>ведёт пост-инцидентный разбор</strong>, превращая выводы в задачи для Detect и Identify.</p>
+
+  <h4>Практическое внедрение</h4>
+  <ol class="steps">
+    <li>Закрепить за SOC <strong>валидацию восстановления</strong>: прежде чем объявить «чисто», подтвердить отсутствие персистентности и повторной компрометации.</li>
+    <li>Сделать <strong>post-incident review (lessons learned)</strong> обязательным этапом по значимым инцидентам — с фиксированным шаблоном.</li>
+    <li>Превращать выводы разбора в <strong>конкретные задачи</strong>: новый детект (→ Detect), пробел в инвентаризации (→ Identify), слабый контроль (→ Protect). Это и есть замыкание колеса.</li>
+    <li>Координировать <strong>коммуникацию восстановления</strong>: статусы для стейкхолдеров, согласованность сообщений.</li>
+    <li>Вести <strong>базу знаний инцидентов</strong>: разборы накапливаются и переиспользуются (питает обучение L1/L2/L3).</li>
+  </ol>
+
+  <div class="box warn">
+    <div class="bh">◆ Частая ошибка</div>
+    <p>Recover нередко считают «не делом SOC» и сводят к восстановлению из бэкапа силами IT. Но именно цикл <strong>lessons learned → новые детекты</strong> отличает SOC, который растёт, от SOC, который год за годом ловит одно и то же. Без замыкания колеса зрелость не растёт.</p>
+  </div>
+
+  <h4>Метрики функции</h4>
+  <div class="metrics">
+    <span class="metric"><b>MTTRecover</b> время восстановления</span>
+    <span class="metric"><b>%</b> инцидентов с разбором</span>
+    <span class="metric"><b>#</b> детектов, рождённых разбором</span>
+    <span class="metric"><b>%</b> закрытых action items</span>
+    <span class="metric"><b>#</b> повторных инцидентов того же типа</span>
+  </div>
+
+  <h4>Лестница зрелости</h4>
+  <div class="ladder">
+    <div class="rung t1"><div class="lv">TIER 1</div><div class="t">Partial</div><p>Восстановили и забыли; разборов нет, повторные инциденты того же типа.</p></div>
+    <div class="rung t2"><div class="lv">TIER 2</div><div class="t">Risk Informed</div><p>Разборы делают по крупным инцидентам, но выводы редко доходят до задач.</p></div>
+    <div class="rung t3"><div class="lv">TIER 3</div><div class="t">Repeatable</div><p>Разбор обязателен, SOC валидирует чистоту, выводы стабильно превращаются в задачи.</p></div>
+    <div class="rung t4"><div class="lv">TIER 4</div><div class="t">Adaptive</div><p>Цикл уроков непрерывно улучшает Detect/Identify/Protect; повторные инциденты стремятся к нулю.</p></div>
+  </div>
+</section>
+
+<!-- ===== ROADMAP ===== -->
+<section id="roadmap">
+  <div class="sec-head">
+    <div class="sec-num">07</div>
+    <div class="sec-titles">
+      <h2>Дорожная карта внедрения</h2>
+      <div class="q">Фазовый план: от устава до адаптивного цикла</div>
+    </div>
+  </div>
+  <p>Внедрять колесо целиком и сразу — путь к выгоранию. Ниже — фазовый порядок, в котором функции усиливают друг друга: сначала фундамент (Govern + Identify), затем ядро (Detect + Respond), потом замыкание и адаптация.</p>
+
+  <div class="phase">
+    <div class="ph"><span class="pn">PHASE 0</span><span class="pt">Фундамент управления</span><span class="pw">Govern · Identify</span></div>
+    <p>Устав SOC, роли L1/L2/L3, политика эскалации, риск-аппетит. Параллельно — инвентаризация и связка CMDB ↔ источники логов. Без этого всё остальное строится на песке. Цель — выйти на Tier 2 по GV и ID.</p>
+  </div>
+  <div class="phase">
+    <div class="ph"><span class="pn">PHASE 1</span><span class="pt">Видимость и baseline</span><span class="pw">Protect · Detect</span></div>
+    <p>Закрыть покрытие телеметрией критичных активов и identity. Запустить базовый каталог use-case'ов под ключевые риски. Согласовать наблюдаемый hardening-baseline с IT. Цель — измеримое покрытие детектирования.</p>
+  </div>
+  <div class="phase">
+    <div class="ph"><span class="pn">PHASE 2</span><span class="pt">Повторяемое реагирование</span><span class="pw">Respond</span></div>
+    <p>Плейбуки на типовые сценарии, классификация и SLA, базовая оркестрация рутины, матрица коммуникаций и полномочий containment. Цель — Tier 3 по Respond (результат не зависит от конкретного дежурного).</p>
+  </div>
+  <div class="phase">
+    <div class="ph"><span class="pn">PHASE 3</span><span class="pt">Замыкание колеса</span><span class="pw">Recover · Detect</span></div>
+    <p>Обязательные пост-инцидентные разборы, валидация чистоты восстановления, цикл lessons learned → новые детекты. Запуск threat hunting по гипотезам. Цель — самоулучшающийся SOC.</p>
+  </div>
+  <div class="phase">
+    <div class="ph"><span class="pn">PHASE 4</span><span class="pt">Адаптивность</span><span class="pw">все функции</span></div>
+    <p>Валидация покрытия эмуляцией атак (BAS / purple team), TI-driven адаптация детектов, метрики SOC влияют на риск-стратегию в Govern. Цель — движение к Tier 4 в приоритетных направлениях.</p>
+  </div>
+</section>
+
+<!-- ===== METRICS ===== -->
+<section id="metrics">
+  <div class="sec-head">
+    <div class="sec-num">08</div>
+    <div class="sec-titles">
+      <h2>Сводный каталог метрик</h2>
+      <div class="q">Что измерять и что из этого выносить наверх в Govern</div>
+    </div>
+  </div>
+  <p>Метрики делятся на <strong>операционные</strong> (для управления SOC изнутри) и <strong>управленческие</strong> (для отчётности в Govern). Не путайте аудитории: руководству не нужен FP-rate отдельного правила, а инженеру детектирования — квартальный тренд риска.</p>
+  <table>
+    <tr><th>Функция</th><th>Метрика</th><th>Тип</th><th>Что показывает</th></tr>
+    <tr><td class="cmono">GV</td><td>Покрытие критичных сервисов мониторингом</td><td>Управленч.</td><td>Насколько мониторинг бьёт по тому, что важно бизнесу</td></tr>
+    <tr><td class="cmono">GV</td><td>Соблюдение SLA по критичности</td><td>Управленч.</td><td>Держим ли обещания, заданные риск-аппетитом</td></tr>
+    <tr><td class="cmono">ID</td><td>% активов с поставкой логов</td><td>Оперативн.</td><td>Размер слепых зон детектирования</td></tr>
+    <tr><td class="cmono">ID</td><td>Теневые активы / месяц</td><td>Оперативн.</td><td>Качество инвентаризации и обратной связи</td></tr>
+    <tr><td class="cmono">PR</td><td>% здоровья защитных агентов</td><td>Оперативн.</td><td>Деградация контролей до того, как ей воспользуются</td></tr>
+    <tr><td class="cmono">DE</td><td>MTTD — среднее время обнаружения</td><td>Оба</td><td>Скорость обнаружения; ключевая для бизнеса</td></tr>
+    <tr><td class="cmono">DE</td><td>% покрытия техник противника</td><td>Оба</td><td>Сколько реальных техник вообще детектируется</td></tr>
+    <tr><td class="cmono">DE</td><td>FP-rate</td><td>Оперативн.</td><td>Шум, выжигающий аналитиков</td></tr>
+    <tr><td class="cmono">RS</td><td>MTTR / MTTC</td><td>Оба</td><td>Скорость реагирования и локализации</td></tr>
+    <tr><td class="cmono">RS</td><td>% инцидентов по плейбуку</td><td>Оперативн.</td><td>Повторяемость реагирования</td></tr>
+    <tr><td class="cmono">RC</td><td>Детектов, рождённых разбором</td><td>Оба</td><td>Замыкается ли колесо, растёт ли SOC</td></tr>
+    <tr><td class="cmono">RC</td><td>Повторные инциденты того же типа</td><td>Управленч.</td><td>Учимся ли мы на инцидентах</td></tr>
+  </table>
+  <div class="box note">
+    <div class="bh">◆ Антипаттерн метрик</div>
+    <p>«Количество обработанных алертов» как KPI поощряет шум и наказывает за тюнинг. Меряйте <strong>исходы</strong> (MTTD, MTTR, покрытие, повторные инциденты), а не <strong>активность</strong> (число алертов, число тикетов). Активность растёт, когда SOC работает плохо.</p>
+  </div>
+</section>
+
+<!-- ===== RACI ===== -->
+<section id="raci">
+  <div class="sec-head">
+    <div class="sec-num">09</div>
+    <div class="sec-titles">
+      <h2>Разграничение: SOC / IT / бизнес</h2>
+      <div class="q">Колесо работает, только когда зоны ответственности однозначны</div>
+    </div>
+  </div>
+  <p>CSF — общеорганизационный фреймворк, и SOC владеет не всем. Чёткое разграничение снимает конфликты «это не наша зона» во время инцидента. Ниже — где SOC <strong>владеет</strong> (R/A), где <strong>участвует</strong> (C), где <strong>информируется</strong> (I).</p>
+  <table>
+    <tr><th>Функция</th><th>Роль SOC</th><th>Кто ещё</th></tr>
+    <tr><td class="cmono">GV — Govern</td><td><b>Поставщик данных / исполнитель</b> (C)</td><td>Владеет руководство ИБ / CISO</td></tr>
+    <tr><td class="cmono">ID — Identify</td><td><b>Потребитель + валидатор</b> (C/R на теневых активах)</td><td>Владеет IT / asset management</td></tr>
+    <tr><td class="cmono">PR — Protect</td><td><b>Требования к наблюдаемости + валидация</b> (C)</td><td>Владеет IT / инженерия</td></tr>
+    <tr><td class="cmono">DE — Detect</td><td><b>Владелец</b> (R/A)</td><td>Опирается на телеметрию от IT</td></tr>
+    <tr><td class="cmono">RS — Respond</td><td><b>Владелец</b> (R/A); решения бизнеса эскалирует</td><td>Бизнес/юристы — на критичных решениях</td></tr>
+    <tr><td class="cmono">RC — Recover</td><td><b>Валидация чистоты + lessons learned</b> (R/A на разборе)</td><td>Восстановление сервисов — IT</td></tr>
+  </table>
+  <div class="box gold">
+    <div class="bh">✓ Вывод</div>
+    <p>Безоговорочное ядро SOC — <strong>Detect и Respond</strong>. В Identify/Protect/Recover SOC — сильный соисполнитель и валидатор. В Govern — поставщик фактов для решений. Понимание этих границ важнее, чем знание кодов категорий: оно определяет, за что с вас спросят.</p>
+  </div>
+</section>
+
+<!-- ===== ASSESS ===== -->
+<section id="assess">
+  <div class="sec-head">
+    <div class="sec-num">10</div>
+    <div class="sec-titles">
+      <h2>Чеклист самооценки</h2>
+      <div class="q">Быстрая диагностика: где ваш SOC сейчас по каждой функции</div>
+    </div>
+  </div>
+  <p>Отметьте утверждения, которые верны <em>прямо сейчас</em>, без «почти» и «в планах». Доля закрытых пунктов по функции грубо соответствует Tier'у: &lt;25% — Tier 1, до 50% — Tier 2, до 80% — Tier 3, выше — приближение к Tier 4.</p>
+
+  <h4>Govern</h4>
+  <ul>
+    <li>Существует утверждённый устав SOC с зафиксированным scope.</li>
+    <li>Роли L1/L2/L3 и полномочия на containment описаны и известны команде.</li>
+    <li>SLA привязаны к риск-аппетиту, а не взяты «с потолка».</li>
+    <li>Есть регулярная отчётность наверх с фиксированным набором метрик.</li>
+  </ul>
+  <h4>Identify</h4>
+  <ul>
+    <li>Каждый критичный актив имеет подтверждённую поставку телеметрии.</li>
+    <li>Критичность активов размечена и используется в приоритетах алертов.</li>
+    <li>Теневые активы регулярно отлавливаются и возвращаются в учёт.</li>
+  </ul>
+  <h4>Protect</h4>
+  <ul>
+    <li>Hardening-baseline согласован, а его нарушения логируются.</li>
+    <li>Identity-телеметрия покрывает аутентификацию и привилегированные операции.</li>
+    <li>Здоровье защитных агентов мониторится, деградация = алерт.</li>
+  </ul>
+  <h4>Detect</h4>
+  <ul>
+    <li>Есть каталог use-case'ов с измеримым покрытием техник противника.</li>
+    <li>Detection engineering — процесс с версиями, тестами и ревью.</li>
+    <li>Каждый ложноположительный разбирается и ведёт к тюнингу.</li>
+    <li>Threat hunting ведётся регулярно по гипотезам.</li>
+  </ul>
+  <h4>Respond</h4>
+  <ul>
+    <li>Плейбуки покрывают основные сценарии и известны дежурным.</li>
+    <li>Рутинные действия реагирования автоматизированы.</li>
+    <li>Артефакты сохраняются с соблюдением целостности.</li>
+    <li>Матрица коммуникаций определяет, кого и когда уведомлять.</li>
+  </ul>
+  <h4>Recover</h4>
+  <ul>
+    <li>SOC валидирует чистоту среды перед объявлением «восстановлено».</li>
+    <li>Пост-инцидентный разбор обязателен по значимым инцидентам.</li>
+    <li>Выводы разборов стабильно превращаются в задачи (новые детекты и пр.).</li>
+  </ul>
+
+  <div class="box gold">
+    <div class="bh">✓ Что делать с результатом</div>
+    <p>Для каждой функции зафиксируйте текущий и целевой Tier. Разрывы — это ваш backlog, а фазы из раздела 07 задают порядок его закрытия. Пересматривайте самооценку раз в квартал: движение по этой шкале и есть путь «до совершенства» в терминах CSF.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="lg">ZavetSec</div>
+  <p style="margin-top:10px">NIST CSF 2.0 — Операционная модель SOC · обезличенный референс для blue team</p>
+  <p class="v">Версия 1.0 · стек-агностичный · для внедрения и публикации · MIT</p>
+</footer>
+
+</div>
+</body>
+</html>
