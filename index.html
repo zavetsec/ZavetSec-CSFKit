@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZavetSec · NIST CSF 2.0 для SOC</title>
+<meta name="description" content="NIST CSF 2.0 для SOC: операционный референс, самооценка зрелости и карта покрытия детектирования. Стек-агностично, zero dependencies, offline-first.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+:root{
+  --bg:#0a0d10;--panel:#0d1117;--panel2:#11161d;--panel3:#070a0d;
+  --accent:#00ff88;--accent-dim:#00b863;--text:#c9d4de;--muted:#6b7986;--faint:#46525d;--line:#1c252e;
+  --red:#ff4d5e;--amber:#ffb02e;--blue:#39a0ff;--purple:#b18cff;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;--disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:15px;line-height:1.7;position:relative;overflow-x:hidden;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,255,136,.022) 0,rgba(0,255,136,.022) 1px,transparent 1px,transparent 3px);mix-blend-mode:overlay;opacity:.5}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(1000px 680px at 50% -8%,rgba(0,255,136,.1),transparent 60%),radial-gradient(700px 500px at 92% 12%,rgba(57,160,255,.05),transparent 55%)}
+.wrap{max-width:960px;margin:0 auto;padding:0 22px 90px}
+
+/* hero */
+.hero{padding:80px 0 44px;text-align:center;border-bottom:1px solid var(--line)}
+.eyebrow{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--accent);margin-bottom:26px;display:inline-flex;align-items:center;gap:12px;justify-content:center}
+.eyebrow::before,.eyebrow::after{content:"";width:30px;height:1px;background:var(--accent)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 1.8s infinite ease-in-out}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+
+.banner{display:inline-block;text-align:left;margin:0 auto;overflow-x:auto;max-width:100%}
+.banner pre{font-family:var(--mono);font-size:clamp(5px,1.55vw,11px);line-height:1.05;color:var(--accent);text-shadow:0 0 16px rgba(0,255,136,.35);white-space:pre;margin:0}
+
+h1{font-family:var(--disp);font-weight:700;font-size:clamp(26px,4.5vw,42px);line-height:1.05;letter-spacing:-.3px;color:#eef4f8;text-transform:uppercase;margin-top:30px}
+h1 .g{color:var(--accent)}
+.tagline{margin:18px auto 0;color:var(--muted);font-size:14px;max-width:600px;line-height:1.7}
+.badges{margin-top:26px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.badge{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);background:var(--panel2);padding:5px 11px;border-radius:3px;color:var(--muted)}
+.badge b{font-weight:500}
+.b-mit b{color:var(--accent)} .b-nist b{color:var(--blue)} .b-mitre b{color:var(--amber)}
+.b-zero b{color:var(--accent)} .b-stack b{color:var(--purple)}
+
+/* intro */
+.intro{margin:46px 0 0;border:1px solid var(--line);border-left:3px solid var(--accent);background:linear-gradient(135deg,rgba(0,255,136,.05),transparent 72%);border-radius:5px;padding:20px 24px}
+.intro p{font-size:13.5px;margin:8px 0}
+.intro p:first-child{margin-top:0}
+.intro b{color:#eef4f8;font-weight:500}
+.intro .acc{color:var(--accent)}
+
+/* cards */
+.section-label{font-family:var(--disp);text-transform:uppercase;letter-spacing:.14em;font-size:13px;color:var(--muted);font-weight:600;margin:54px 0 18px;display:flex;align-items:center;gap:12px}
+.section-label::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.cards{display:grid;gap:16px}
+.card{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:22px 24px;transition:.18s;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent-dim);transition:.18s}
+.card:hover{border-color:var(--accent-dim);transform:translateX(3px);background:var(--panel2)}
+.card:hover::before{width:5px;background:var(--accent);box-shadow:0 0 14px var(--accent)}
+.card-top{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.card-num{font-family:var(--disp);font-weight:700;font-size:28px;color:var(--accent);line-height:1;min-width:42px}
+.card-titles{flex:1}
+.card h3{font-family:var(--disp);font-weight:600;text-transform:uppercase;letter-spacing:.02em;font-size:20px;color:#eef4f8;line-height:1.05}
+.card .kind{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-dim);margin-top:3px}
+.card .arrow{font-size:18px;color:var(--faint);transition:.18s}
+.card:hover .arrow{color:var(--accent);transform:translateX(4px)}
+.card p{font-size:13px;color:var(--muted);margin:6px 0 0;line-height:1.6}
+.card .feats{margin-top:12px;display:flex;flex-wrap:wrap;gap:7px}
+.feat{font-size:10.5px;letter-spacing:.04em;border:1px solid var(--line);background:var(--panel3);color:var(--text);padding:3px 9px;border-radius:3px}
+.card .fname{margin-top:12px;font-size:11px;color:var(--faint)}
+
+/* flow */
+.flow{margin-top:30px;border:1px solid var(--line);border-radius:8px;background:var(--panel);overflow:hidden}
+.flow-h{padding:14px 20px;border-bottom:1px solid var(--line);font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;font-size:13px;color:var(--muted);font-weight:600}
+.flow-body{padding:8px 22px 18px}
+.flow-step{display:flex;gap:14px;padding:11px 0;border-bottom:1px solid var(--line);align-items:baseline;font-size:13px}
+.flow-step:last-child{border-bottom:none}
+.flow-step .sn{font-family:var(--disp);font-weight:700;color:var(--accent-dim);font-size:13px;min-width:26px}
+.flow-step b{color:#eef4f8;font-weight:500}
+
+/* principles */
+.princ{margin-top:30px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.pr{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:14px;text-align:center}
+.pr .pt{font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:12px;color:var(--accent);margin-bottom:5px}
+.pr p{font-size:10.5px;color:var(--muted);margin:0;line-height:1.45}
+
+footer{margin-top:64px;padding-top:26px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:11px;letter-spacing:.08em}
+footer .lg{font-family:var(--disp);color:var(--accent);font-size:15px;letter-spacing:.32em;text-transform:uppercase}
+footer .v{margin-top:8px;color:var(--faint)}
+footer .repo{margin-top:14px}
+footer .repo a{color:var(--accent-dim);text-decoration:none;border:1px solid var(--line);padding:7px 14px;border-radius:4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;transition:.15s;display:inline-block}
+footer .repo a:hover{border-color:var(--accent);color:var(--accent)}
+footer .disc{margin-top:18px;color:var(--faint);font-size:10px;letter-spacing:.04em;max-width:560px;margin-left:auto;margin-right:auto;line-height:1.5}
+
+@media(max-width:680px){.princ{grid-template-columns:1fr 1fr}.card-num{font-size:22px;min-width:32px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow"><span class="dot"></span> Blue Team Toolkit · NIST CSF 2.0 <span class="dot"></span></div>
+  <div class="banner"><pre>
+ ________                            __    ____
+/\_____  \                          /\ \__/\  _`\
+\/____//'/'     __     __  __     __\ \ ,_\ \,\L\_\     __    ___
+     //'/'    /'__`\  /\ \/\ \  /'__`\ \ \/\/_\__ \   /'__`\ /'___\
+    //'/'___ /\ \L\.\_\ \ \_/ |/\  __/\ \ \_ /\ \L\ \/\  __//\ \__/
+    /\_______\ \__/.\_\\ \___/ \ \____\\ \__\\ `\____\ \____\ \____\
+    \/_______/\/__/\/_/ \/__/   \/____/ \/__/ \/_____/\/____/\/____/</pre></div>
+  <h1>NIST CSF 2.0 <span class="g">для SOC</span></h1>
+  <p class="tagline">Операционный набор blue team: референс по шести функциям, самооценка зрелости и карта покрытия детектирования. Стек-агностично, ноль зависимостей, работает офлайн.</p>
+  <div class="badges">
+    <span class="badge b-mit">license <b>MIT</b></span>
+    <span class="badge b-nist">NIST CSF <b>2.0</b></span>
+    <span class="badge b-mitre">MITRE <b>ATT&CK</b></span>
+    <span class="badge b-zero">dependencies <b>zero</b></span>
+    <span class="badge b-stack">stack <b>agnostic</b></span>
+  </div>
+</div>
+
+<div class="intro">
+  <p>«Колёсико NIST» — это <b>NIST Cybersecurity Framework 2.0</b>: шесть функций по кругу — <span class="acc">Govern · Identify · Protect · Detect · Respond · Recover</span> — на которых описывают, чем занимается организация в части киберриска и насколько это зрело.</p>
+  <p>Набор переводит фреймворк на язык повседневной работы SOC: что делать по каждой функции, как измерять зрелость и какие use-case'ы детектирования уже закрыты. Везде указаны <b>классы систем</b> (SIEM, EDR/XDR, NDR, SOAR, IdP), а не конкретные продукты — подставьте свой стек.</p>
+</div>
+
+<div class="section-label">Три инструмента</div>
+<div class="cards">
+
+  <a class="card" href="nist-csf-soc-framework.html">
+    <div class="card-top">
+      <div class="card-num">01</div>
+      <div class="card-titles">
+        <h3>Операционный референс</h3>
+        <div class="kind">Документ · шесть функций</div>
+      </div>
+      <div class="arrow">→</div>
+    </div>
+    <p>Каждая функция как набор зон ответственности, контролей, метрик и уровней зрелости. Плюс модель из четырёх Tier'ов, дорожная карта по фазам, каталог метрик и матрица разграничения SOC / IT / бизнес.</p>
+    <div class="feats"><span class="feat">6 функций</span><span class="feat">Tier 1–4</span><span class="feat">RACI</span><span class="feat">дорожная карта</span><span class="feat">метрики</span></div>
+    <div class="fname">nist-csf-soc-framework.html</div>
+  </a>
+
+  <a class="card" href="soc-maturity-self-assessment.html">
+    <div class="card-top">
+      <div class="card-num">02</div>
+      <div class="card-titles">
+        <h3>Самооценка зрелости</h3>
+        <div class="kind">Инструмент · интерактив</div>
+      </div>
+      <div class="arrow">→</div>
+    </div>
+    <p>31 утверждение по шести функциям. Tier по каждой функции и общий уровень считаются на лету по принципу «слабого звена». Сводка копируется в отчёт, прогресс сохраняется локально.</p>
+    <div class="feats"><span class="feat">31 чек</span><span class="feat">live Tier</span><span class="feat">weakest-link</span><span class="feat">экспорт сводки</span></div>
+    <div class="fname">soc-maturity-self-assessment.html</div>
+  </a>
+
+  <a class="card" href="csf-coverage-map.html">
+    <div class="card-top">
+      <div class="card-num">03</div>
+      <div class="card-titles">
+        <h3>Карта покрытия</h3>
+        <div class="kind">Воркшит · CSF × MITRE</div>
+      </div>
+      <div class="arrow">→</div>
+    </div>
+    <p>37 use-case'ов детектирования и реагирования: категория CSF, источник данных, класс инструмента, техника MITRE ATT&CK. Статус Covered / Partial / Gap / N/A с живым счётчиком и экспортом в CSV.</p>
+    <div class="feats"><span class="feat">37 UC</span><span class="feat">MITRE ATT&CK</span><span class="feat">статусы</span><span class="feat">CSV</span></div>
+    <div class="fname">csf-coverage-map.html</div>
+  </a>
+
+</div>
+
+<div class="section-label">Как пользоваться</div>
+<div class="flow">
+  <div class="flow-h">// цикл: понять → измерить → закрыть пробелы</div>
+  <div class="flow-body">
+    <div class="flow-step"><span class="sn">01</span><span>Прочитать <b>референс</b> — понять модель и зоны ответственности SOC.</span></div>
+    <div class="flow-step"><span class="sn">02</span><span>Пройти <b>самооценку</b> — зафиксировать текущий и целевой Tier по функциям.</span></div>
+    <div class="flow-step"><span class="sn">03</span><span>Заполнить <b>карту покрытия</b> — отметить статусы, выявить Gap'ы.</span></div>
+    <div class="flow-step"><span class="sn">04</span><span>Разрывы зрелости + Gap'ы детектов = <b>backlog внедрения</b>.</span></div>
+    <div class="flow-step"><span class="sn">05</span><span>Двигаться по дорожной карте (фазы 0–4), пересматривать раз в квартал.</span></div>
+  </div>
+</div>
+
+<div class="section-label">Принципы</div>
+<div class="princ">
+  <div class="pr"><div class="pt">Zero deps</div><p>Каждый файл самодостаточен, без CDN и скриптов извне.</p></div>
+  <div class="pr"><div class="pt">Offline-first</div><p>Работает без интернета, ничего не отправляет наружу.</p></div>
+  <div class="pr"><div class="pt">Stack-agnostic</div><p>Классы инструментов вместо продуктов.</p></div>
+  <div class="pr"><div class="pt">Privacy</div><p>Состояние хранится только в вашем браузере.</p></div>
+</div>
+
+<footer>
+  <div class="lg">ZavetSec</div>
+  <p style="margin-top:10px">Инструменты для blue team · zero dependencies · offline-first · MIT</p>
+  <div class="repo"><a href="https://github.com/zavetsec" target="_blank" rel="noopener">github.com/zavetsec →</a></div>
+  <p class="disc">NIST CSF — фреймворк NIST; MITRE ATT&CK — торговая марка MITRE. Проект не аффилирован с NIST или MITRE.</p>
+  <p class="v" style="margin-top:14px">v1.0</p>
+</footer>
+
+</div>
+</body>
+</html>
