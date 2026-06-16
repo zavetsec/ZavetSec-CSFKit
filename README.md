@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="banner.svg" alt="ZavetSec" width="640">
+<img src="banner.png" alt="ZavetSec" width="720">
 
 ### NIST CSF 2.0 для SOC — операционный набор blue team
 
